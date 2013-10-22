@@ -8,7 +8,7 @@ This release
 
 Cloudhands is a very young project. This release contains the following:
 
-* the beginnings of an operations guide
+* definition of permissions for a managed domain
 
 Requirements
 ::::::::::::
@@ -23,16 +23,12 @@ Quick start
 
 Download and unpack the source distribution::
 
-    $ tar -xzvf cloudhands-ops-0.001.tar.gz
-    $ cd cloudhands-ops-0.001
+    $ tar -xzvf cloudhands-common-0.001.tar.gz
+    $ cd cloudhands-common-0.001
 
 Run the tests::
 
     $ python3.4 -m unittest discover cloudhands
-
-Consult the documentation::
-
-    $ firefox cloudhands/ops/doc/html/index.html
 
 Roadmap
 :::::::
@@ -67,4 +63,3 @@ Can you help?
 .. _setuptools: https://pypi.python.org/pypi/setuptools
 .. _compile Python 3.4: http://www.python.org/download/source/
 .. _BSD licence: http://opensource.org/licenses/BSD-3-Clause
-.. _GNU Affero General Public License: http://www.gnu.org/licenses/agpl-3.0.html
