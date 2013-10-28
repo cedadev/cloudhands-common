@@ -1,6 +1,10 @@
 #!/usr/bin/env python3
 #   encoding: UTF-8
 
+__doc__ = """
+The permissions module defines activities which are to be controlled.
+"""
+
 paving = set(["user.add", "rpm.install"])
 access = set(["ssh.copy", "sshd.config", "initctl.restart"])
 firewall = set(["kmod.write",

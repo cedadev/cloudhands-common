@@ -25,7 +25,9 @@ setup(
     namespace_packages=["cloudhands"],
     packages=["cloudhands.common"],
     package_data={"cloudhands.common": []},
-    install_requires=[],
+    install_requires=[
+        "SQLAlchemy>=0.8.3",
+    ],
     entry_points={
         "console_scripts": [
         ],
