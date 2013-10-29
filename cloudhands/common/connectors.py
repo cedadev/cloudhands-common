@@ -32,11 +32,10 @@ class SQLite3Client(object):
         #TODO: use sqlalchemy.engine.url.URL
         sqlaPath = "sqlite:///" + path
         engine = sqlalchemy.create_engine(
-                    sqlaPath, module=module, poolclass=StaticPool,
-                    connect_args={"check_same_thread": False})
+            sqlaPath, module=module, poolclass=StaticPool,
+            connect_args={"check_same_thread": False})
         sqlalchemy.event.listen(engine, "connect", self.on_connect)
         metadata.bind = engine
         metadata.create_all()
         Session.configure(bind=engine)
         return engine
-

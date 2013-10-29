@@ -3,12 +3,11 @@
 
 import unittest
 
-import cloudhands.common.schema
-from cloudhands.common.discovery import state_machines
+import cloudhands.common.fsm
+from cloudhands.common.discovery import fsm
 
 
 class DiscoveryTest(unittest.TestCase):
 
     def test_state_machines(self):
-        self.assertIn(cloudhands.common.schema.CredentialState,
-                      state_machines())
+        self.assertIn(cloudhands.common.fsm.CredentialState, fsm)

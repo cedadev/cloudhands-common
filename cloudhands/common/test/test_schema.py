@@ -12,8 +12,9 @@ import sqlalchemy.exc
 from cloudhands.common.connectors import SQLite3Client
 from cloudhands.common.connectors import Session
 
+from cloudhands.common.fsm import CredentialState
+
 import cloudhands.common.schema
-from cloudhands.common.schema import CredentialState
 from cloudhands.common.schema import EmailCredential
 from cloudhands.common.schema import State
 from cloudhands.common.schema import Touch

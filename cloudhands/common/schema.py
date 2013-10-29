@@ -121,6 +121,3 @@ def fsm_factory(name, states):
     )
     class_ = type(className, (State,), attribs)
     return class_
-
-CredentialState = fsm_factory(
-    "credential", ["untrusted", "trusted", "expired"])

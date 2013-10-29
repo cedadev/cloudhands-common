@@ -23,13 +23,19 @@ setup(
         "License :: OSI Approved :: BSD License"
     ],
     namespace_packages=["cloudhands"],
-    packages=["cloudhands.common"],
-    package_data={"cloudhands.common": []},
+    packages=["cloudhands.common", "cloudhands.common.test"],
+    package_data={
+        "cloudhands.common": [],
+        "cloudhands.common.test": [],
+    },
     install_requires=[
         "SQLAlchemy>=0.8.3",
     ],
     entry_points={
         "console_scripts": [
+        ],
+        "jasmin.component.fsm": [
+            "credential = cloudhands.common.fsm:CredentialState",
         ],
     },
     zip_safe=False
