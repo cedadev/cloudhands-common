@@ -2,49 +2,22 @@
 #   encoding: UTF-8
 
 import datetime
-import unittest
+import operator
 import sqlite3
+import unittest
+import uuid
 
-import sqlalchemy
-from sqlalchemy.orm import sessionmaker
-from sqlalchemy.pool import StaticPool
+import sqlalchemy.exc
 
-from cloudhands.common.schema import metadata
+from cloudhands.common.connectors import SQLite3Client
+from cloudhands.common.connectors import Session
+
+import cloudhands.common.schema
 from cloudhands.common.schema import CredentialState
 from cloudhands.common.schema import EmailCredential
 from cloudhands.common.schema import State
-
-Session = sessionmaker()
-
-class SQLite3Client(object):
-    """
-    A mixin class which sets up a connection to a SQLite3 database
-    and binds it through SQLAlchemy to this module's Session class.
-    """
-
-    @staticmethod
-    def sqlite_fk_pragma(dbapi_con, con_record):
-        dbapi_con.execute("pragma foreign_keys=ON")
-
-    @staticmethod
-    def on_connect(dbapi_con, con_record):
-        SQLite3Client.sqlite_fk_pragma(dbapi_con, con_record)
-
-    def connect(self, module, path=":memory:"):
-        """
-        Creates, configures and returns a SQLAlchemy engine connected
-        to a SQLite3 database.
-        """
-        #TODO: use sqlalchemy.engine.url.URL
-        sqlaPath = "sqlite:///" + path
-        engine = sqlalchemy.create_engine(
-                    sqlaPath, module=module, poolclass=StaticPool,
-                    connect_args={"check_same_thread": False})
-        sqlalchemy.event.listen(engine, "connect", self.on_connect)
-        metadata.bind = engine
-        metadata.create_all()
-        Session.configure(bind=engine)
-        return engine
+from cloudhands.common.schema import Touch
+from cloudhands.common.schema import User
 
 
 class TestCredentialState(SQLite3Client, unittest.TestCase):
@@ -52,12 +25,6 @@ class TestCredentialState(SQLite3Client, unittest.TestCase):
     def setUp(self):
         """ Every test gets its own in-memory database """
         self.engine = self.connect(sqlite3)
-
-    def test_initialisation(self):
-        obj = CredentialState.init()
-        self.assertEqual(CredentialState.table, obj.fsm)
-        self.assertEqual(CredentialState.values[0], obj.name)
-
 
     def test_duplicate_names(self):
         session = Session()
@@ -79,75 +46,94 @@ class TestCredentialState(SQLite3Client, unittest.TestCase):
             self.fail(e)
 
 
-class TestEmailCredentialFSM(SQLite3Client, unittest.TestCase):
+class TestEmailCredential(SQLite3Client, unittest.TestCase):
 
     def setUp(self):
         """ Every test gets its own in-memory database """
         self.engine = self.connect(sqlite3)
 
-
-    def test_create(self):
+    def test_required_field(self):
         session = Session()
-        self.assertRaises(TypeError, EmailCredential.init)
+        cred = EmailCredential(
+            typ="emailcredential", uuid=uuid.uuid4().hex,
+            model=cloudhands.common.__version__)
+        session.add(cred)
+        self.assertRaises(
+            sqlalchemy.exc.IntegrityError, session.commit)
 
-    def test_transitions(self):
-        cred = EmailCredential.init("somebody@gmail.com")
-
-    def test_new_touch(self):
-        then = datetime.datetime.utcnow() - datetime.timedelta(seconds=1)
+    def test_email_field(self):
         session = Session()
-        u = User(
-            handle="Anon", email="anonymous@gmail.com",
-            uuid=uuid.uuid4().hex)
-        start = State(fsm="lifecycle", name="start")
-        stop = State(fsm="lifecycle", name="stop")
-        f = Pricing(
-            name="standard", value=5, currency="GBP",
-            commission_num=1, commission_den=1,
-            description="description")
-        p = Product(
-            typ="product", uuid=uuid.uuid4().hex,
-            model=topicmob.schema.__version__,
-            title="title", description="descr", min=4, max=10,
-            fee=f)
-        p.changes.append(
-            Touch(artifact=p, actor=u, state=start, at=then))
-        session.add(p)
+        cred = EmailCredential(
+            typ="emailcredential", uuid=uuid.uuid4().hex,
+            model=cloudhands.common.__version__,
+            email="somebody@gmail.com")
+        session.add(cred)
+        session.commit()
+        self.assertIs(cred, session.query(EmailCredential).first())
+
+class TestEmailCredentialFSM(SQLite3Client, unittest.TestCase):
+
+    def setUp(self):
+        """ Every test gets its own in-memory database """
+        self.engine = self.connect(sqlite3)
+        session = Session()
+        session.add_all(
+            State(fsm=CredentialState.table, name=v)
+            for v in CredentialState.values)
         session.commit()
 
-        self.assertIs(p.changes[0].state, start)
-        self.assertIs(session.query(Touch).first().state, start)
+    def test_using_touches(self):
+        then = datetime.datetime.utcnow() - datetime.timedelta(seconds=1)
+        session = Session()
+
+        user = User(handle="Anon", uuid=uuid.uuid4().hex)
+
+        cred = EmailCredential(
+            typ="emailcredential", uuid=uuid.uuid4().hex,
+            model=cloudhands.common.__version__,
+            email="somebody@gmail.com")
+        untrust = session.query(CredentialState).filter(
+            CredentialState.name == "untrusted").first()
+        cred.changes.append(
+            Touch(artifact=cred, actor=user, state=untrust, at=then))
+        session.add(cred)
+        session.commit()
+
+        self.assertIs(cred.changes[0].state, untrust)
+        self.assertIs(session.query(Touch).first().state, untrust)
         self.assertEqual(session.query(Touch).count(), 1)
 
         now = datetime.datetime.utcnow()
         self.assertTrue(now > then)
-        p.changes.append(
-            Touch(artifact=p, actor=u, state=stop, at=now))
+        trust = session.query(CredentialState).filter(
+            CredentialState.name == "trusted").first()
+        cred.changes.append(
+            Touch(artifact=cred, actor=user, state=trust, at=now))
         session.commit()
 
-        self.assertIs(p.changes[1].state, stop)
+        self.assertIs(cred.changes[1].state, trust)
         self.assertIs(
-            session.query(Touch).order_by(Touch.at)[-1].state, stop)
+            session.query(Touch).order_by(Touch.at)[-1].state, trust)
         self.assertEqual(session.query(Touch).count(), 2)
 
         self.assertEqual(
             session.query(Touch).filter(Touch.at < now).first(),
-            p.changes[0])
+            cred.changes[0])
         self.assertIs(
             session.query(Touch).filter(
                 Touch.at > then).first(),
-            p.changes[1])
+            cred.changes[1])
 
-        p.changes.sort(key=operator.attrgetter("at"), reverse=True)
+        cred.changes.sort(key=operator.attrgetter("at"), reverse=True)
 
         self.assertEqual(
             session.query(Touch).filter(
                 Touch.at < now).first(),
-            p.changes[1])
+            cred.changes[1])
         self.assertIs(
             session.query(Touch).filter(
                 Touch.at > then).first(),
-            p.changes[0])
+            cred.changes[0])
 
 if __name__ == "__main__":
     unittest.main()

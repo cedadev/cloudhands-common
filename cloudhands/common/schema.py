@@ -1,9 +1,6 @@
 #!/usr/bin/env python3
 #   encoding: UTF-8
 
-from collections import namedtuple
-import functools
-
 from sqlalchemy import Column
 from sqlalchemy import DateTime
 from sqlalchemy import ForeignKey
@@ -108,13 +105,6 @@ class State(Base):
     __mapper_args__ = {'polymorphic_on': fsm}
 
 
-def state_init(class_, fsm, states):
-    """
-    A generic initialiser for a state object.
-    """
-    return class_(fsm=fsm, name=states[0])
-
-
 def fsm_factory(name, states):
     """
     Dynamically create a class for a state machine. The pattern used
@@ -130,7 +120,6 @@ def fsm_factory(name, states):
         values=states,
     )
     class_ = type(className, (State,), attribs)
-    class_.init = functools.partial(state_init, class_, name, states)
     return class_
 
 CredentialState = fsm_factory(
