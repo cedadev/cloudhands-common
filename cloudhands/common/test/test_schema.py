@@ -72,6 +72,7 @@ class TestEmailCredential(SQLite3Client, unittest.TestCase):
         session.commit()
         self.assertIs(cred, session.query(EmailCredential).first())
 
+
 class TestEmailCredentialFSM(SQLite3Client, unittest.TestCase):
 
     def setUp(self):
