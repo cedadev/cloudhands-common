@@ -4,12 +4,8 @@
 import pkg_resources
 
 __doc__ = """
-Here is a list of the registered APIs:
+This module discovers entry points in installed packages
 
-jasmin.component.fsm
---------------------
-
-Pluggable FSM interface.
 """
 
 
@@ -23,3 +19,8 @@ def discover(id):
             yield ep
 
 fsm = list(discover("jasmin.component.fsm"))
+"""
+This is the programmatic aggregate of all discovered state machines.
+Each entry point declared as a ``jasmin.component.fsm`` should be a class
+you have generated with :py:func:`cloudhands.common.schema.fsm_factory`.
+"""
