@@ -8,6 +8,7 @@ from sqlalchemy.pool import StaticPool
 
 from cloudhands.common.discovery import fsm
 from cloudhands.common.schema import metadata
+from cloudhands.common.schema import State
 
 Session = sessionmaker()
 
@@ -42,6 +43,7 @@ class SQLite3Client(object):
         Session.configure(bind=engine)
         return engine
 
+
 class Initialiser(SQLite3Client):
 
     def connect(self, module, path=":memory:"):
@@ -49,14 +51,11 @@ class Initialiser(SQLite3Client):
         engine = super().connect(module, path)
         session = Session(autoflush=False)
 
-        try:
-            #session.add_all(
-            #    State(fsm="product", name=k) for k in self.handlers)
-            for i in fsm:
-                log.info(i)
-            session.commit()
-        except Exception as e:
-            self.session.rollback()
-            log.info(e)
-
-
+        items = (State(fsm=m.table, name=s) for m in fsm for s in m.values)
+        for i in items:  # Add them individually to permit schema changes
+            try:
+                session.add(i)
+                session.commit()
+            except Exception as e:
+                self.session.rollback()
+                log.info(e)
