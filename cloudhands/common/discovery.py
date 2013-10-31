@@ -20,7 +20,21 @@ def discover(id):
 
 fsm = list(discover("jasmin.component.fsm"))
 """
-This is the programmatic aggregate of all discovered state machines.
+This is the collection of all discovered state machines.
 Each entry point declared as a ``jasmin.component.fsm`` should be a class
 you have generated with :py:func:`cloudhands.common.schema.fsm_factory`.
 """
+
+settings = list(discover("jasmin.site.settings"))
+"""
+This is the collection of all discovered key-value mappings.
+Each entry point declared as a ``jasmin.site.settings`` should be a python
+ConfigParser_ object.
+
+.. _ConfigParser: http://docs.python.org/3.3/library/configparser.html
+"""
+
+
+if __name__ == "__main__":
+    print(fsm)
+    print(settings)
