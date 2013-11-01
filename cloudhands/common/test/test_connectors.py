@@ -8,7 +8,7 @@ from cloudhands.common.connectors import Initialiser
 from cloudhands.common.connectors import Session
 from cloudhands.common.connectors import SQLite3Client
 
-from cloudhands.common.discovery import fsm
+from cloudhands.common.discovery import fsms
 
 from cloudhands.common.schema import State
 
@@ -26,5 +26,5 @@ class IntialiserTest(Initialiser, unittest.TestCase):
     def test_db_is_initialised_on_connect(self):
         engine = self.connect(sqlite3)
         session = Session()
-        nStates = len([s for m in fsm for s in m.values])
+        nStates = len([s for m in fsms for s in m.values])
         self.assertEqual(nStates, session.query(State).count())

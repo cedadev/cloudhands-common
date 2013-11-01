@@ -6,7 +6,7 @@ import sqlalchemy
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import StaticPool
 
-from cloudhands.common.discovery import fsm
+from cloudhands.common.discovery import fsms
 from cloudhands.common.schema import metadata
 from cloudhands.common.schema import State
 
@@ -51,7 +51,7 @@ class Initialiser(SQLite3Client):
         engine = super().connect(module, path)
         session = Session(autoflush=False)
 
-        items = (State(fsm=m.table, name=s) for m in fsm for s in m.values)
+        items = (State(fsm=m.table, name=s) for m in fsms for s in m.values)
         for i in items:  # Add them individually to permit schema changes
             try:
                 session.add(i)
