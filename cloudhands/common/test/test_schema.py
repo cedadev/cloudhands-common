@@ -40,7 +40,7 @@ class TestCredentialState(SQLite3Client, unittest.TestCase):
         session = Session()
         session.add_all([
             State(fsm="credential", name="start"),
-            State(fsm="billing", name="start")])
+            State(fsm="resource", name="start")])
         try:
             session.commit()
         except sqlalchemy.exc.IntegrityError as e:
