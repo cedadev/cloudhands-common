@@ -57,5 +57,5 @@ class Initialiser(SQLite3Client):
                 session.add(i)
                 session.commit()
             except Exception as e:
-                self.session.rollback()
-                log.info(e)
+                session.rollback()
+                log.debug(e)
