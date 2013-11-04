@@ -21,6 +21,9 @@ The schema module defines tables in the common database
 
 
 class Artifact(Base):
+    """
+    .. TODO: Add entry point for artifacts
+    """
     __tablename__ = "artifacts"
 
     id = Column("id", Integer(), nullable=False, primary_key=True)
@@ -42,6 +45,17 @@ class EmailCredential(Artifact):
     email = Column("email", String(length=128), nullable=False, unique=True)
 
     __mapper_args__ = {"polymorphic_identity": "emailcredential"}
+
+
+class DCStatus(Artifact):
+    __tablename__ = "dcstatus"
+
+    id = Column("id", Integer, ForeignKey("artifacts.id"),
+                nullable=False, primary_key=True)
+    uri = Column("uri", String(length=128), nullable=False)
+    name = Column("name", String(length=128), nullable=False)
+
+    __mapper_args__ = {"polymorphic_identity": "dcstatus"}
 
 
 class Actor(Base):
@@ -73,6 +87,15 @@ class User(Actor):
                 nullable=False, primary_key=True)
 
     __mapper_args__ = {"polymorphic_identity": "user"}
+
+
+class Component(Actor):
+    __tablename__ = "components"
+
+    id = Column("id", Integer, ForeignKey("actors.id"),
+                nullable=False, primary_key=True)
+
+    __mapper_args__ = {"polymorphic_identity": "component"}
 
 
 class Touch(Base):

@@ -1,13 +1,19 @@
 #!/usr/bin/env python3
 #   encoding: UTF-8
 
+from itertools import chain
 import logging
+import uuid
+
 import sqlalchemy
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import StaticPool
 
+from cloudhands.common.component import burstCtrl  # TODO: Entry point
 from cloudhands.common.discovery import fsms
+
 from cloudhands.common.schema import metadata
+from cloudhands.common.schema import Component
 from cloudhands.common.schema import State
 
 Session = sessionmaker()
@@ -51,7 +57,10 @@ class Initialiser(SQLite3Client):
         engine = super().connect(module, path)
         session = Session(autoflush=False)
 
-        items = (State(fsm=m.table, name=s) for m in fsms for s in m.values)
+        items = chain(
+            (State(fsm=m.table, name=s) for m in fsms for s in m.values),
+            (Component(uuid=uuid.uuid4().hex, handle=i) for i in (burstCtrl,))
+            )
         for i in items:  # Add them individually to permit schema changes
             try:
                 session.add(i)
