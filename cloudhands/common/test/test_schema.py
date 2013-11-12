@@ -18,6 +18,8 @@ from cloudhands.common.fsm import HostState
 import cloudhands.common.schema
 from cloudhands.common.schema import EmailCredential
 from cloudhands.common.schema import Host
+from cloudhands.common.schema import IPAddress
+from cloudhands.common.schema import Node
 from cloudhands.common.schema import State
 from cloudhands.common.schema import Touch
 from cloudhands.common.schema import User
@@ -183,6 +185,21 @@ class TestHostsAndResources(SQLite3Client, unittest.TestCase):
             Touch(artifact=host, actor=user, state=scheduling, at=now))
         session.commit()
 
+        # 3. Burst controller raises a node
+        now = datetime.datetime.utcnow()
+        act = Touch(artifact=host, actor=user, state=scheduling, at=now)
+        host.changes.append(act)
+        node = Node(name=host.name, touch=act)
+        session.add(node)
+        session.commit()
+
+        # 4. Burst controller allocates an IP
+        now = datetime.datetime.utcnow()
+        act = Touch(artifact=host, actor=user, state=scheduling, at=now)
+        host.changes.append(act)
+        ip = IPAddress(value="192.168.1.4", touch=act)
+        session.add(node)
+        session.commit()
 
 if __name__ == "__main__":
     unittest.main()

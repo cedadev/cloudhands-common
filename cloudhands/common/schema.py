@@ -125,10 +125,13 @@ class Touch(Base):
 class Resource(Base):
     __tablename__ = "resources"
 
-    id = Column("id", Integer(), nullable=False, primary_key=True)
-    touch_id = Column(
-        "touch_id", Integer, ForeignKey("touches.id"), primary_key=True)
+    id = Column("id", Integer, ForeignKey("touches.id"), primary_key=True)
+    typ = Column("typ", String(length=32), nullable=False)
     touch = relationship("Touch")
+
+    __mapper_args__ = {
+        "polymorphic_identity": "resource",
+        "polymorphic_on": typ}
 
 
 class IPAddress(Resource):
@@ -136,6 +139,7 @@ class IPAddress(Resource):
 
     id = Column("id", Integer, ForeignKey("resources.id"),
                 nullable=False, primary_key=True)
+    value = Column("value", String(length=64), nullable=False)
 
     __mapper_args__ = {"polymorphic_identity": "ipaddress"}
 
@@ -145,8 +149,9 @@ class Node(Resource):
 
     id = Column("id", Integer, ForeignKey("resources.id"),
                 nullable=False, primary_key=True)
+    name = Column("name", String(length=64), nullable=False)
 
-    __mapper_args__ = {"polymorphic_identity": "nodes"}
+    __mapper_args__ = {"polymorphic_identity": "node"}
 
 
 class State(Base):
