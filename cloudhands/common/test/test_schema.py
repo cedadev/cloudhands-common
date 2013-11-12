@@ -20,6 +20,7 @@ from cloudhands.common.schema import EmailCredential
 from cloudhands.common.schema import Host
 from cloudhands.common.schema import IPAddress
 from cloudhands.common.schema import Node
+from cloudhands.common.schema import Resource
 from cloudhands.common.schema import State
 from cloudhands.common.schema import Touch
 from cloudhands.common.schema import User
@@ -44,7 +45,7 @@ class TestCredentialState(SQLite3Client, unittest.TestCase):
         session = Session()
         session.add_all([
             State(fsm="credential", name="start"),
-            State(fsm="resource", name="start")])
+            State(fsm="host", name="start")])
         try:
             session.commit()
         except sqlalchemy.exc.IntegrityError as e:
@@ -99,7 +100,7 @@ class TestEmailCredentialFSM(SQLite3Client, unittest.TestCase):
             model=cloudhands.common.__version__,
             email="somebody@gmail.com")
         untrust = session.query(CredentialState).filter(
-            CredentialState.name == "untrusted").first()
+            CredentialState.name == "untrusted").one()
         cred.changes.append(
             Touch(artifact=cred, actor=user, state=untrust, at=then))
         session.add(cred)
@@ -112,7 +113,7 @@ class TestEmailCredentialFSM(SQLite3Client, unittest.TestCase):
         now = datetime.datetime.utcnow()
         self.assertTrue(now > then)
         trust = session.query(CredentialState).filter(
-            CredentialState.name == "trusted").first()
+            CredentialState.name == "trusted").one()
         cred.changes.append(
             Touch(artifact=cred, actor=user, state=trust, at=now))
         session.commit()
@@ -162,7 +163,7 @@ class TestHostsAndResources(SQLite3Client, unittest.TestCase):
         # 1. User creates a new host
         now = datetime.datetime.utcnow()
         requested = session.query(HostState).filter(
-            HostState.name == "requested").first()
+            HostState.name == "requested").one()
         host = Host(
             uuid=uuid.uuid4().hex,
             model=cloudhands.common.__version__,
@@ -180,7 +181,7 @@ class TestHostsAndResources(SQLite3Client, unittest.TestCase):
 
         now = datetime.datetime.utcnow()
         scheduling = session.query(HostState).filter(
-            HostState.name == "scheduling").first()
+            HostState.name == "scheduling").one()
         host.changes.append(
             Touch(artifact=host, actor=user, state=scheduling, at=now))
         session.commit()
@@ -198,8 +199,23 @@ class TestHostsAndResources(SQLite3Client, unittest.TestCase):
         act = Touch(artifact=host, actor=user, state=scheduling, at=now)
         host.changes.append(act)
         ip = IPAddress(value="192.168.1.4", touch=act)
-        session.add(node)
+        session.add(ip)
+        self.assertIn(act, session)
         session.commit()
+
+        # 5. Burst controller marks Host as unknown
+        now = datetime.datetime.utcnow()
+        unknown = session.query(HostState).filter(
+            HostState.name == "unknown").one()
+        host.changes.append(
+            Touch(artifact=host, actor=user, state=unknown, at=now))
+
+        # 6. Recovering details of provisioning of this host
+        resources = [r for i in session.query(Touch).filter(
+            Touch.artifact == host).all() for r in i.resources]
+        self.assertIn(node, resources)
+        self.assertIn(ip, resources)
+
 
 if __name__ == "__main__":
     unittest.main()

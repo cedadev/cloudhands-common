@@ -120,6 +120,7 @@ class Touch(Base):
     artifact = relationship("Artifact")
     actor = relationship("Actor")
     state = relationship("State")
+    resources = relationship("Resource")
 
 
 class Resource(Base):
