@@ -36,7 +36,7 @@ setup(
         ],
         "jasmin.component.fsm": [
             "credential = cloudhands.common.fsm:CredentialState",
-            "resource = cloudhands.common.fsm:ResourceState",
+            "host = cloudhands.common.fsm:HostState",
         ],
     },
     zip_safe=False

@@ -11,3 +11,4 @@ class DiscoveryTest(unittest.TestCase):
 
     def test_state_machines(self):
         self.assertIn(cloudhands.common.fsm.CredentialState, fsms)
+        self.assertIn(cloudhands.common.fsm.HostState, fsms)

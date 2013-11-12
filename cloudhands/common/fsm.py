@@ -6,5 +6,5 @@ from cloudhands.common.schema import fsm_factory
 CredentialState = fsm_factory(
     "credential", ["untrusted", "trusted", "expired"])
 
-ResourceState = fsm_factory(
-    "resource", ["unknown", "up", "down"])
+HostState = fsm_factory(
+    "host", ["requested", "scheduling", "unknown", "up", "down"])

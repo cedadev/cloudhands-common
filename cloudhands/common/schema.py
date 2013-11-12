@@ -58,6 +58,16 @@ class DCStatus(Artifact):
     __mapper_args__ = {"polymorphic_identity": "dcstatus"}
 
 
+class Host(Artifact):
+    __tablename__ = "hosts"
+
+    id = Column("id", Integer, ForeignKey("artifacts.id"),
+                nullable=False, primary_key=True)
+    name = Column("name", String(length=128), nullable=False)
+
+    __mapper_args__ = {"polymorphic_identity": "dcstatus"}
+
+
 class Actor(Base):
     """
     This is the base table for all actors in the system. Concrete classes
@@ -110,6 +120,33 @@ class Touch(Base):
     artifact = relationship("Artifact")
     actor = relationship("Actor")
     state = relationship("State")
+
+
+class Resource(Base):
+    __tablename__ = "resources"
+
+    id = Column("id", Integer(), nullable=False, primary_key=True)
+    touch_id = Column(
+        "touch_id", Integer, ForeignKey("touches.id"), primary_key=True)
+    touch = relationship("Touch")
+
+
+class IPAddress(Resource):
+    __tablename__ = "ipaddresses"
+
+    id = Column("id", Integer, ForeignKey("resources.id"),
+                nullable=False, primary_key=True)
+
+    __mapper_args__ = {"polymorphic_identity": "ipaddress"}
+
+
+class Node(Resource):
+    __tablename__ = "nodes"
+
+    id = Column("id", Integer, ForeignKey("resources.id"),
+                nullable=False, primary_key=True)
+
+    __mapper_args__ = {"polymorphic_identity": "nodes"}
 
 
 class State(Base):

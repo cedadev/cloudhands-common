@@ -13,9 +13,11 @@ from cloudhands.common.connectors import SQLite3Client
 from cloudhands.common.connectors import Session
 
 from cloudhands.common.fsm import CredentialState
+from cloudhands.common.fsm import HostState
 
 import cloudhands.common.schema
 from cloudhands.common.schema import EmailCredential
+from cloudhands.common.schema import Host
 from cloudhands.common.schema import State
 from cloudhands.common.schema import Touch
 from cloudhands.common.schema import User
@@ -136,6 +138,51 @@ class TestEmailCredentialFSM(SQLite3Client, unittest.TestCase):
             session.query(Touch).filter(
                 Touch.at > then).first(),
             cred.changes[0])
+
+
+class TestHostsAndResources(SQLite3Client, unittest.TestCase):
+
+    def setUp(self):
+        """ Every test gets its own in-memory database """
+        self.engine = self.connect(sqlite3)
+        session = Session()
+        session.add_all(
+            State(fsm=HostState.table, name=v)
+            for v in HostState.values)
+        session.commit()
+
+    def test_single_host_lifecycle(self):
+        session = Session()
+
+        # 0. Set up User
+        user = User(handle="Anon", uuid=uuid.uuid4().hex)
+
+        # 1. User creates a new host
+        now = datetime.datetime.utcnow()
+        requested = session.query(HostState).filter(
+            HostState.name == "requested").first()
+        host = Host(
+            uuid=uuid.uuid4().hex,
+            model=cloudhands.common.__version__,
+            name="userwantsthishostname"
+            )
+        host.changes.append(
+            Touch(artifact=host, actor=user, state=requested, at=now))
+        session.add(host)
+        session.commit()
+
+        # 2. Burst controller finds hosts in 'requested' and provisions them
+        latest = (h.changes[-1] for h in session.query(Host).all())
+        jobs = [(t.actor, t.artifact) for t in latest if t.state is requested]
+        self.assertIn((user, host), jobs)
+
+        now = datetime.datetime.utcnow()
+        scheduling = session.query(HostState).filter(
+            HostState.name == "scheduling").first()
+        host.changes.append(
+            Touch(artifact=host, actor=user, state=scheduling, at=now))
+        session.commit()
+
 
 if __name__ == "__main__":
     unittest.main()
