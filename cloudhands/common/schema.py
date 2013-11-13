@@ -139,7 +139,7 @@ class Resource(Base):
 
 
 class EmailAddress(Resource):
-    __tablename__ = "emailaddress"
+    __tablename__ = "emailaddresses"
 
     id = Column("id", Integer, ForeignKey("resources.id"),
                 nullable=False, primary_key=True)
