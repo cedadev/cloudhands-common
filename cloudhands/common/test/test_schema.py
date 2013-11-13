@@ -68,7 +68,7 @@ class TestMembership(SQLite3Client, unittest.TestCase):
         self.assertRaises(
             sqlalchemy.exc.IntegrityError, session.commit)
 
-    def test_email_field(self):
+    def test_organisation_field(self):
         session = Session()
         mship = Membership(
             uuid=uuid.uuid4().hex,
@@ -77,6 +77,7 @@ class TestMembership(SQLite3Client, unittest.TestCase):
         session.add(mship)
         session.commit()
         self.assertIs(mship, session.query(Membership).first())
+        self.assertIsNone(mship.organisation)
 
 
 class TestMembershipFSM(SQLite3Client, unittest.TestCase):
