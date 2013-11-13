@@ -12,13 +12,14 @@ import sqlalchemy.exc
 from cloudhands.common.connectors import SQLite3Client
 from cloudhands.common.connectors import Session
 
-from cloudhands.common.fsm import CredentialState
 from cloudhands.common.fsm import HostState
+from cloudhands.common.fsm import MembershipState
 
 import cloudhands.common.schema
-from cloudhands.common.schema import EmailCredential
+from cloudhands.common.schema import EmailAddress
 from cloudhands.common.schema import Host
 from cloudhands.common.schema import IPAddress
+from cloudhands.common.schema import Membership
 from cloudhands.common.schema import Node
 from cloudhands.common.schema import Resource
 from cloudhands.common.schema import State
@@ -52,7 +53,7 @@ class TestCredentialState(SQLite3Client, unittest.TestCase):
             self.fail(e)
 
 
-class TestEmailCredential(SQLite3Client, unittest.TestCase):
+class TestMembership(SQLite3Client, unittest.TestCase):
 
     def setUp(self):
         """ Every test gets its own in-memory database """
@@ -60,87 +61,88 @@ class TestEmailCredential(SQLite3Client, unittest.TestCase):
 
     def test_required_field(self):
         session = Session()
-        cred = EmailCredential(
-            typ="emailcredential", uuid=uuid.uuid4().hex,
+        mship = Membership(
+            uuid=uuid.uuid4().hex,
             model=cloudhands.common.__version__)
-        session.add(cred)
+        session.add(mship)
         self.assertRaises(
             sqlalchemy.exc.IntegrityError, session.commit)
 
     def test_email_field(self):
         session = Session()
-        cred = EmailCredential(
-            typ="emailcredential", uuid=uuid.uuid4().hex,
+        mship = Membership(
+            uuid=uuid.uuid4().hex,
             model=cloudhands.common.__version__,
-            email="somebody@gmail.com")
-        session.add(cred)
+            role="user")
+        session.add(mship)
         session.commit()
-        self.assertIs(cred, session.query(EmailCredential).first())
+        self.assertIs(mship, session.query(Membership).first())
 
 
-class TestEmailCredentialFSM(SQLite3Client, unittest.TestCase):
+class TestMembershipFSM(SQLite3Client, unittest.TestCase):
 
     def setUp(self):
         """ Every test gets its own in-memory database """
         self.engine = self.connect(sqlite3)
         session = Session()
         session.add_all(
-            State(fsm=CredentialState.table, name=v)
-            for v in CredentialState.values)
+            State(fsm=MembershipState.table, name=v)
+            for v in MembershipState.values)
         session.commit()
 
     def test_using_touches(self):
         then = datetime.datetime.utcnow() - datetime.timedelta(seconds=1)
         session = Session()
 
-        user = User(handle="Anon", uuid=uuid.uuid4().hex)
+        user = User(handle=None, uuid=uuid.uuid4().hex)
 
-        cred = EmailCredential(
-            typ="emailcredential", uuid=uuid.uuid4().hex,
+        mship = Membership(
+            uuid=uuid.uuid4().hex,
             model=cloudhands.common.__version__,
-            email="somebody@gmail.com")
-        untrust = session.query(CredentialState).filter(
-            CredentialState.name == "untrusted").one()
-        cred.changes.append(
-            Touch(artifact=cred, actor=user, state=untrust, at=then))
-        session.add(cred)
+            organisation="nameofavirtualorganisation",
+            role="user")
+        ungrant = session.query(MembershipState).filter(
+            MembershipState.name == "ungranted").one()
+        mship.changes.append(
+            Touch(artifact=mship, actor=user, state=ungrant, at=then))
+        session.add(mship)
         session.commit()
 
-        self.assertIs(cred.changes[0].state, untrust)
-        self.assertIs(session.query(Touch).first().state, untrust)
+        self.assertIs(mship.changes[0].state, ungrant)
+        self.assertIs(session.query(Touch).first().state, ungrant)
         self.assertEqual(session.query(Touch).count(), 1)
 
         now = datetime.datetime.utcnow()
         self.assertTrue(now > then)
-        trust = session.query(CredentialState).filter(
-            CredentialState.name == "trusted").one()
-        cred.changes.append(
-            Touch(artifact=cred, actor=user, state=trust, at=now))
+        grant = session.query(MembershipState).filter(
+            MembershipState.name == "granted").one()
+        mship.changes.append(
+            Touch(artifact=mship, actor=user, state=grant, at=now))
         session.commit()
 
-        self.assertIs(cred.changes[1].state, trust)
+        self.assertIs(mship.changes[1].state, grant)
         self.assertIs(
-            session.query(Touch).order_by(Touch.at)[-1].state, trust)
+            session.query(Touch).order_by(Touch.at)[-1].state, grant)
         self.assertEqual(session.query(Touch).count(), 2)
 
         self.assertEqual(
             session.query(Touch).filter(Touch.at < now).first(),
-            cred.changes[0])
+            mship.changes[0])
         self.assertIs(
             session.query(Touch).filter(
                 Touch.at > then).first(),
-            cred.changes[1])
+            mship.changes[1])
 
-        cred.changes.sort(key=operator.attrgetter("at"), reverse=True)
+        mship.changes.sort(key=operator.attrgetter("at"), reverse=True)
 
         self.assertEqual(
             session.query(Touch).filter(
                 Touch.at < now).first(),
-            cred.changes[1])
+            mship.changes[1])
         self.assertIs(
             session.query(Touch).filter(
                 Touch.at > then).first(),
-            cred.changes[0])
+            mship.changes[0])
 
 
 class TestHostsAndResources(SQLite3Client, unittest.TestCase):

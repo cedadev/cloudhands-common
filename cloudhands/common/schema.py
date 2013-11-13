@@ -37,16 +37,7 @@ class Artifact(Base):
         "polymorphic_on": typ}
 
 
-class EmailCredential(Artifact):
-    __tablename__ = "emailcredentials"
-
-    id = Column("id", Integer, ForeignKey("artifacts.id"),
-                nullable=False, primary_key=True)
-    email = Column("email", String(length=128), nullable=False, unique=True)
-
-    __mapper_args__ = {"polymorphic_identity": "emailcredential"}
-
-
+# TODO: revisit
 class DCStatus(Artifact):
     __tablename__ = "dcstatus"
 
@@ -56,6 +47,18 @@ class DCStatus(Artifact):
     name = Column("name", String(length=128), nullable=False)
 
     __mapper_args__ = {"polymorphic_identity": "dcstatus"}
+
+
+class Membership(Artifact):
+    __tablename__ = "memberships"
+
+    id = Column("id", Integer, ForeignKey("artifacts.id"),
+                nullable=False, primary_key=True)
+    organisation = Column(
+        "organisation", String(length=32), nullable=True, unique=True)
+    role = Column("role", String(length=32), nullable=False, unique=True)
+
+    __mapper_args__ = {"polymorphic_identity": "membership"}
 
 
 class Host(Artifact):
@@ -135,12 +138,22 @@ class Resource(Base):
         "polymorphic_on": typ}
 
 
+class EmailAddress(Resource):
+    __tablename__ = "emailaddress"
+
+    id = Column("id", Integer, ForeignKey("resources.id"),
+                nullable=False, primary_key=True)
+    value = Column("value", String(length=128), nullable=False, unique=True)
+
+    __mapper_args__ = {"polymorphic_identity": "emailaddress"}
+
+
 class IPAddress(Resource):
     __tablename__ = "ipaddresses"
 
     id = Column("id", Integer, ForeignKey("resources.id"),
                 nullable=False, primary_key=True)
-    value = Column("value", String(length=64), nullable=False)
+    value = Column("value", String(length=64), nullable=False, unique=True)
 
     __mapper_args__ = {"polymorphic_identity": "ipaddress"}
 

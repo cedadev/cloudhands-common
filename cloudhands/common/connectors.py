@@ -68,3 +68,4 @@ class Initialiser(SQLite3Client):
             except Exception as e:
                 session.rollback()
                 log.debug(e)
+        return engine
