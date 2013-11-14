@@ -32,5 +32,8 @@ class TestUserMembership(SQLite3Client, unittest.TestCase):
 
     def test_quick_add_user(self):
         session = Session()
+        session.autoflush = False   # http://stackoverflow.com/a/4202016
         val = "my.name@test.org"
         user = create_user_grant_email_membership(session, val)
+        self.assertIs(user, session.query(User).join(Touch).join(
+            EmailAddress).filter(EmailAddress.value == val).first())
