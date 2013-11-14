@@ -20,7 +20,7 @@ Common functions for interacting with the schema.
 """
 
 def create_user_grant_email_membership(
-    session, addrVal, handle=None, org=None, role="user"):
+    session, org, addrVal, handle=None, role="user"):
     """
     Creates a new user account from an email address. The sequence of
     operations is:
@@ -30,11 +30,11 @@ def create_user_grant_email_membership(
     3.  Touch the membership with an EmailAddress resource from the user.
         The state of membership is set to `granted`.
 
-    :param session:  A SQLALchemy database session.
+    :param object session:  A SQLALchemy database session.
+    :param Organisation org:    The organisation to join.
     :param string addrVal:   The user's email address.
     :param string handle:   Becomes the user's handle. If not supplied, 
                             handle is constructed from the `addrVal`.
-    :param string org: Membership organisation.
     :param string role: Membership role.
     :returns: The newly created User object.
     """

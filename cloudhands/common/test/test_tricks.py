@@ -12,6 +12,7 @@ from cloudhands.common.fsm import MembershipState
 import cloudhands.common.schema
 from cloudhands.common.schema import EmailAddress
 from cloudhands.common.schema import Membership
+from cloudhands.common.schema import Organisation
 from cloudhands.common.schema import State
 from cloudhands.common.schema import Touch
 from cloudhands.common.schema import User
@@ -28,12 +29,17 @@ class TestUserMembership(SQLite3Client, unittest.TestCase):
         session.add_all(
             State(fsm=MembershipState.table, name=v)
             for v in MembershipState.values)
+        session.add(Organisation(name="TestOrg"))
         session.commit()
 
     def test_quick_add_user(self):
         session = Session()
         session.autoflush = False   # http://stackoverflow.com/a/4202016
-        val = "my.name@test.org"
-        user = create_user_grant_email_membership(session, val)
+        oName = "TestOrg"
+        eAddr = "my.name@test.org"
+
+        org = session.query(
+            Organisation).filter(Organisation.name == oName).one()
+        user = create_user_grant_email_membership(session, org, eAddr)
         self.assertIs(user, session.query(User).join(Touch).join(
-            EmailAddress).filter(EmailAddress.value == val).first())
+            EmailAddress).filter(EmailAddress.value == eAddr).first())

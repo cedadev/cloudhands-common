@@ -21,6 +21,7 @@ from cloudhands.common.schema import Host
 from cloudhands.common.schema import IPAddress
 from cloudhands.common.schema import Membership
 from cloudhands.common.schema import Node
+from cloudhands.common.schema import Organisation
 from cloudhands.common.schema import Resource
 from cloudhands.common.schema import State
 from cloudhands.common.schema import Touch
@@ -58,26 +59,36 @@ class TestMembership(SQLite3Client, unittest.TestCase):
     def setUp(self):
         """ Every test gets its own in-memory database """
         self.engine = self.connect(sqlite3)
+        session = Session()
+        session.add_all(
+            State(fsm=MembershipState.table, name=v)
+            for v in MembershipState.values)
+        session.add(Organisation(name="TestOrg"))
+        session.commit()
 
     def test_required_field(self):
         session = Session()
+        org = session.query(Organisation).one()
         mship = Membership(
             uuid=uuid.uuid4().hex,
-            model=cloudhands.common.__version__)
+            model=cloudhands.common.__version__,
+            organisation=org)
         session.add(mship)
         self.assertRaises(
             sqlalchemy.exc.IntegrityError, session.commit)
 
     def test_organisation_field(self):
         session = Session()
+        org = session.query(Organisation).one()
         mship = Membership(
             uuid=uuid.uuid4().hex,
             model=cloudhands.common.__version__,
+            organisation=org,
             role="user")
         session.add(mship)
         session.commit()
         self.assertIs(mship, session.query(Membership).first())
-        self.assertIsNone(mship.organisation)
+        self.assertIs(org, mship.organisation)
 
 
 class TestMembershipFSM(SQLite3Client, unittest.TestCase):
@@ -89,6 +100,7 @@ class TestMembershipFSM(SQLite3Client, unittest.TestCase):
         session.add_all(
             State(fsm=MembershipState.table, name=v)
             for v in MembershipState.values)
+        session.add(Organisation(name="TestOrg"))
         session.commit()
 
     def test_using_touches(self):
@@ -96,11 +108,12 @@ class TestMembershipFSM(SQLite3Client, unittest.TestCase):
         session = Session()
 
         user = User(handle=None, uuid=uuid.uuid4().hex)
+        org = session.query(Organisation).one()
 
         mship = Membership(
             uuid=uuid.uuid4().hex,
             model=cloudhands.common.__version__,
-            organisation="nameofavirtualorganisation",
+            organisation=org,
             role="user")
         ungrant = session.query(MembershipState).filter(
             MembershipState.name == "ungranted").one()
@@ -155,6 +168,7 @@ class TestHostsAndResources(SQLite3Client, unittest.TestCase):
         session.add_all(
             State(fsm=HostState.table, name=v)
             for v in HostState.values)
+        session.add(Organisation(name="TestOrg"))
         session.commit()
 
     def test_single_host_lifecycle(self):
@@ -165,11 +179,13 @@ class TestHostsAndResources(SQLite3Client, unittest.TestCase):
 
         # 1. User creates a new host
         now = datetime.datetime.utcnow()
+        org = session.query(Organisation).one()
         requested = session.query(HostState).filter(
             HostState.name == "requested").one()
         host = Host(
             uuid=uuid.uuid4().hex,
             model=cloudhands.common.__version__,
+            organisation=org,
             name="userwantsthishostname"
             )
         host.changes.append(

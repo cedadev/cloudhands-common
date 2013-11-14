@@ -20,6 +20,16 @@ The schema module defines tables in the common database
 """
 
 
+class Organisation(Base):
+    __tablename__ = "organisations"
+
+    id = Column("id", Integer, nullable=False, primary_key=True)
+    name = Column("name", String(length=64), nullable=False, unique=True)
+    
+    hosts = relationship("Host")
+    memberships = relationship("Membership")
+
+
 class Artifact(Base):
     """
     .. TODO: Add entry point for artifacts
@@ -54,9 +64,12 @@ class Membership(Artifact):
 
     id = Column("id", Integer, ForeignKey("artifacts.id"),
                 nullable=False, primary_key=True)
-    organisation = Column(
-        "organisation", String(length=32), nullable=True, unique=True)
+    organisation_id = Column(
+        "organisation_id", Integer, ForeignKey("organisations.id"),
+        nullable=False)
     role = Column("role", String(length=32), nullable=False, unique=True)
+
+    organisation = relationship("Organisation")
 
     __mapper_args__ = {"polymorphic_identity": "membership"}
 
@@ -66,7 +79,12 @@ class Host(Artifact):
 
     id = Column("id", Integer, ForeignKey("artifacts.id"),
                 nullable=False, primary_key=True)
+    organisation_id = Column(
+        "organisation_id", Integer, ForeignKey("organisations.id"),
+        nullable=False)
     name = Column("name", String(length=128), nullable=False)
+
+    organisation = relationship("Organisation")
 
     __mapper_args__ = {"polymorphic_identity": "dcstatus"}
 
