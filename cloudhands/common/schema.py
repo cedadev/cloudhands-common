@@ -86,7 +86,7 @@ class Host(Artifact):
 
     organisation = relationship("Organisation")
 
-    __mapper_args__ = {"polymorphic_identity": "dcstatus"}
+    __mapper_args__ = {"polymorphic_identity": "host"}
 
 
 class Actor(Base):
