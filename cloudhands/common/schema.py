@@ -40,7 +40,7 @@ class Artifact(Base):
     typ = Column("typ", String(length=32), nullable=False)
     uuid = Column("uuid", CHAR(length=32), nullable=False)
     model = Column("model", String(length=32), nullable=False)
-    changes = relationship("Touch")
+    changes = relationship("Touch", order_by="Touch.at")
 
     __mapper_args__ = {
         "polymorphic_identity": "artifact",
