@@ -119,6 +119,7 @@ class TestResourceManagement(SQLite3Client, unittest.TestCase):
         ip = allocate_ip(session, hosts[0], ipAddr)
         self.assertIn(ip, [r for c in hosts[0].changes for r in c.resources])
 
+        ip = allocate_ip(session, hosts[1], ipAddr)
         self.assertNotIn(
             ip, [r for c in hosts[0].changes for r in c.resources])
         self.assertIn(ip, [r for c in hosts[1].changes for r in c.resources])

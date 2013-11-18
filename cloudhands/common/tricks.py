@@ -82,11 +82,8 @@ def create_user_grant_email_membership(
     return user
 
 def allocate_ip(session, host, ipAddr):
-    owner = session.query(Host).join(Touch).join(IPAddress).filter(
-        IPAddress.value == ipAddr).first()
-    if owner:
-        ip = session.query(IPAddress).filter(IPAddress.value == ipAddr).one()
-        owner.resources.remove(ip)
+    session.query(IPAddress).filter(IPAddress.value == ipAddr).delete()
+
     now = datetime.datetime.utcnow()
     recent = host.changes[-1]
     act = Touch(artifact=host, actor=recent.actor, state=recent.state, at=now)
