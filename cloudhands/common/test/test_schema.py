@@ -209,7 +209,7 @@ class TestHostsAndResources(SQLite3Client, unittest.TestCase):
         now = datetime.datetime.utcnow()
         act = Touch(artifact=host, actor=user, state=scheduling, at=now)
         host.changes.append(act)
-        node = Node(name=host.name, touch=act)
+        node = Node(name=host.name, touch=act, provider="mycloud")
         session.add(node)
         session.commit()
 
@@ -217,7 +217,7 @@ class TestHostsAndResources(SQLite3Client, unittest.TestCase):
         now = datetime.datetime.utcnow()
         act = Touch(artifact=host, actor=user, state=scheduling, at=now)
         host.changes.append(act)
-        ip = IPAddress(value="192.168.1.4", touch=act)
+        ip = IPAddress(value="192.168.1.4", touch=act, provider="mycloud")
         session.add(ip)
         self.assertIn(act, session)
         session.commit()

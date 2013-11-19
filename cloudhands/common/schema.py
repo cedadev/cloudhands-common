@@ -149,6 +149,7 @@ class Resource(Base):
 
     id = Column("id", Integer, ForeignKey("touches.id"), primary_key=True)
     typ = Column("typ", String(length=32), nullable=False)
+    provider = Column("provider", String(length=32), nullable=False)
     touch = relationship("Touch")
 
     __mapper_args__ = {

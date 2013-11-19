@@ -76,7 +76,7 @@ def create_user_grant_email_membership(
 
     grant = Touch(artifact=mship, actor=user, state=granted, at=now)
     mship.changes.append(grant)
-    ea = EmailAddress(value=addrVal, touch=grant)
+    ea = EmailAddress(value=addrVal, touch=grant, provider="mycloud")
     session.add(ea)
     session.commit()
     return user
@@ -88,7 +88,7 @@ def allocate_ip(session, host, ipAddr):
     recent = host.changes[-1]
     act = Touch(artifact=host, actor=recent.actor, state=recent.state, at=now)
     host.changes.append(act)
-    ip = IPAddress(value=ipAddr, touch=act)
+    ip = IPAddress(value=ipAddr, touch=act, provider="mycloud")
     session.add(ip)
     session.commit()
     return ip
