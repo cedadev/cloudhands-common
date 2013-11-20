@@ -29,14 +29,19 @@ class ConnectionTest(unittest.TestCase):
         
     def test_connect_and_disconnect(self):
         r = Registry()
+        self.assertEqual(0, len(list(r.items)))
         con = r.connect(sqlite3, ":memory:")
+        self.assertEqual(1, len(list(r.items)))
 
         dup = r.connect(sqlite3, ":memory:")
         self.assertIs(con.engine, dup.engine)
+        self.assertEqual(1, len(list(r.items)))
 
         dis = r.disconnect(sqlite3, ":memory:")
+        self.assertEqual(0, len(list(r.items)))
         self.assertIs(dup.engine, dis.engine)
         self.assertIs(None, dis.session)
         
         dup = r.connect(sqlite3, ":memory:")
         self.assertIsNot(con.engine, dup.engine)
+        self.assertEqual(1, len(list(r.items)))

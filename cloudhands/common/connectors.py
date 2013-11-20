@@ -62,6 +62,10 @@ class Registry(object):
         if not hasattr(self, "_engines"):
             self._engines = {}
 
+    @property
+    def items(self):
+        return self._engines.keys()
+
     def connect(self, module, path):
         if (module, path) not in self._engines:
             connector = self.connectors[module]()
