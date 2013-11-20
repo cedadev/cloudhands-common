@@ -32,7 +32,7 @@ class TestCredentialState(SQLite3Client, unittest.TestCase):
 
     def setUp(self):
         """ Every test gets its own in-memory database """
-        self.engine = self.connect(sqlite3)
+        self.engine = self.connect(sqlite3, ":memory:")
 
     def test_duplicate_names(self):
         session = Session()
@@ -58,7 +58,7 @@ class TestMembership(SQLite3Client, unittest.TestCase):
 
     def setUp(self):
         """ Every test gets its own in-memory database """
-        self.engine = self.connect(sqlite3)
+        self.engine = self.connect(sqlite3, ":memory:")
         session = Session()
         session.add_all(
             State(fsm=MembershipState.table, name=v)
@@ -95,7 +95,7 @@ class TestMembershipFSM(SQLite3Client, unittest.TestCase):
 
     def setUp(self):
         """ Every test gets its own in-memory database """
-        self.engine = self.connect(sqlite3)
+        self.engine = self.connect(sqlite3, ":memory:")
         session = Session()
         session.add_all(
             State(fsm=MembershipState.table, name=v)
@@ -163,7 +163,7 @@ class TestHostsAndResources(SQLite3Client, unittest.TestCase):
 
     def setUp(self):
         """ Every test gets its own in-memory database """
-        self.engine = self.connect(sqlite3)
+        self.engine = self.connect(sqlite3, ":memory:")
         session = Session()
         session.add_all(
             State(fsm=HostState.table, name=v)

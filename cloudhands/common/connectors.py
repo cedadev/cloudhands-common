@@ -33,7 +33,7 @@ class SQLite3Client(object):
     def on_connect(dbapi_con, con_record):
         SQLite3Client.sqlite_fk_pragma(dbapi_con, con_record)
 
-    def connect(self, module, path=":memory:"):
+    def connect(self, module, path):
         """
         Creates, configures and returns a SQLAlchemy engine connected
         to a SQLite3 database.
@@ -52,7 +52,7 @@ class SQLite3Client(object):
 
 class Initialiser(SQLite3Client):
 
-    def connect(self, module, path=":memory:"):
+    def connect(self, module, path):
         log = logging.getLogger("cloudhands.common.initialiser")
         engine = super().connect(module, path)
         session = Session(autoflush=False)

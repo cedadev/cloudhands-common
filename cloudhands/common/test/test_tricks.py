@@ -30,7 +30,7 @@ class TestUserMembership(SQLite3Client, unittest.TestCase):
 
     def setUp(self):
         """ Every test gets its own in-memory database """
-        self.engine = self.connect(sqlite3)
+        self.engine = self.connect(sqlite3, ":memory:")
         session = Session()
         session.add_all(
             State(fsm=MembershipState.table, name=v)
@@ -68,7 +68,7 @@ class TestResourceManagement(SQLite3Client, unittest.TestCase):
 
     def setUp(self):
         """ Every test gets its own in-memory database """
-        self.engine = self.connect(sqlite3)
+        self.engine = self.connect(sqlite3, ":memory:")
         session = Session()
         session.add_all(
             State(fsm=HostState.table, name=v)

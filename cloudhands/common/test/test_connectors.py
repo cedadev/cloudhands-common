@@ -16,7 +16,7 @@ from cloudhands.common.schema import State
 class SQLite3ClientTest(SQLite3Client, unittest.TestCase):
 
     def test_db_is_empty_on_connect(self):
-        engine = self.connect(sqlite3)
+        engine = self.connect(sqlite3, ":memory:")
         session = Session()
         self.assertEqual(0, session.query(State).count())
 
@@ -24,7 +24,7 @@ class SQLite3ClientTest(SQLite3Client, unittest.TestCase):
 class IntialiserTest(Initialiser, unittest.TestCase):
 
     def test_db_is_initialised_on_connect(self):
-        engine = self.connect(sqlite3)
+        engine = self.connect(sqlite3, ":memory:")
         session = Session()
         nStates = len([s for m in fsms for s in m.values])
         self.assertEqual(nStates, session.query(State).count())
