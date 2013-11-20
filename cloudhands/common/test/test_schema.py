@@ -9,8 +9,8 @@ import uuid
 
 import sqlalchemy.exc
 
-from cloudhands.common.connectors import SQLite3Client
-from cloudhands.common.connectors import Session
+from cloudhands.common.connectors import initialise
+from cloudhands.common.connectors import Registry
 
 from cloudhands.common.fsm import HostState
 from cloudhands.common.fsm import MembershipState
@@ -28,14 +28,15 @@ from cloudhands.common.schema import Touch
 from cloudhands.common.schema import User
 
 
-class TestCredentialState(SQLite3Client, unittest.TestCase):
+class TestCredentialState(unittest.TestCase):
 
-    def setUp(self):
+    def tearDown(self):
         """ Every test gets its own in-memory database """
-        self.engine = self.connect(sqlite3, ":memory:")
+        r = Registry()
+        r.disconnect(sqlite3, ":memory:")
 
     def test_duplicate_names(self):
-        session = Session()
+        session = Registry().connect(sqlite3, ":memory:").session
         session.add_all([
             State(fsm="credential", name="untrusted"),
             State(fsm="credential", name="untrusted")])
@@ -44,7 +45,7 @@ class TestCredentialState(SQLite3Client, unittest.TestCase):
 
     def test_shared_names(self):
         """ State names can be shared across FSMs """
-        session = Session()
+        session = Registry().connect(sqlite3, ":memory:").session
         session.add_all([
             State(fsm="credential", name="start"),
             State(fsm="host", name="start")])
@@ -54,20 +55,24 @@ class TestCredentialState(SQLite3Client, unittest.TestCase):
             self.fail(e)
 
 
-class TestMembership(SQLite3Client, unittest.TestCase):
+class TestMembership(unittest.TestCase):
 
     def setUp(self):
-        """ Every test gets its own in-memory database """
-        self.engine = self.connect(sqlite3, ":memory:")
-        session = Session()
+        """ Populate test database"""
+        session = Registry().connect(sqlite3, ":memory:").session
         session.add_all(
             State(fsm=MembershipState.table, name=v)
             for v in MembershipState.values)
         session.add(Organisation(name="TestOrg"))
         session.commit()
 
+    def tearDown(self):
+        """ Every test gets its own in-memory database """
+        r = Registry()
+        r.disconnect(sqlite3, ":memory:")
+
     def test_required_field(self):
-        session = Session()
+        session = Registry().connect(sqlite3, ":memory:").session
         org = session.query(Organisation).one()
         mship = Membership(
             uuid=uuid.uuid4().hex,
@@ -78,7 +83,7 @@ class TestMembership(SQLite3Client, unittest.TestCase):
             sqlalchemy.exc.IntegrityError, session.commit)
 
     def test_organisation_field(self):
-        session = Session()
+        session = Registry().connect(sqlite3, ":memory:").session
         org = session.query(Organisation).one()
         mship = Membership(
             uuid=uuid.uuid4().hex,
@@ -91,21 +96,25 @@ class TestMembership(SQLite3Client, unittest.TestCase):
         self.assertIs(org, mship.organisation)
 
 
-class TestMembershipFSM(SQLite3Client, unittest.TestCase):
+class TestMembershipFSM(unittest.TestCase):
 
     def setUp(self):
-        """ Every test gets its own in-memory database """
-        self.engine = self.connect(sqlite3, ":memory:")
-        session = Session()
+        """ Populate test database"""
+        session = Registry().connect(sqlite3, ":memory:").session
         session.add_all(
             State(fsm=MembershipState.table, name=v)
             for v in MembershipState.values)
         session.add(Organisation(name="TestOrg"))
         session.commit()
 
+    def tearDown(self):
+        """ Every test gets its own in-memory database """
+        r = Registry()
+        r.disconnect(sqlite3, ":memory:")
+
     def test_using_touches(self):
         then = datetime.datetime.utcnow() - datetime.timedelta(seconds=1)
-        session = Session()
+        session = Registry().connect(sqlite3, ":memory:").session
 
         user = User(handle=None, uuid=uuid.uuid4().hex)
         org = session.query(Organisation).one()
@@ -159,20 +168,24 @@ class TestMembershipFSM(SQLite3Client, unittest.TestCase):
             mship.changes[0])
 
 
-class TestHostsAndResources(SQLite3Client, unittest.TestCase):
+class TestHostsAndResources(unittest.TestCase):
 
     def setUp(self):
-        """ Every test gets its own in-memory database """
-        self.engine = self.connect(sqlite3, ":memory:")
-        session = Session()
+        """ Populate test database"""
+        session = Registry().connect(sqlite3, ":memory:").session
         session.add_all(
             State(fsm=HostState.table, name=v)
             for v in HostState.values)
         session.add(Organisation(name="TestOrg"))
         session.commit()
 
+    def tearDown(self):
+        """ Every test gets its own in-memory database """
+        r = Registry()
+        r.disconnect(sqlite3, ":memory:")
+
     def test_single_host_lifecycle(self):
-        session = Session()
+        session = Registry().connect(sqlite3, ":memory:").session
 
         # 0. Set up User
         user = User(handle="Anon", uuid=uuid.uuid4().hex)

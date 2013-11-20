@@ -4,27 +4,39 @@
 import sqlite3
 import unittest
 
-from cloudhands.common.connectors import Initialiser
-from cloudhands.common.connectors import Session
-from cloudhands.common.connectors import SQLite3Client
-
-from cloudhands.common.discovery import fsms
+from cloudhands.common.connectors import initialise
+from cloudhands.common.connectors import Registry
 
 from cloudhands.common.schema import State
 
 
-class SQLite3ClientTest(SQLite3Client, unittest.TestCase):
+class ConnectionTest(unittest.TestCase):
 
-    def test_db_is_empty_on_connect(self):
-        engine = self.connect(sqlite3, ":memory:")
-        session = Session()
-        self.assertEqual(0, session.query(State).count())
+    def tearDown(self):
+        r = Registry()
+        r.disconnect(sqlite3, ":memory:")
 
+    def test_initialise_db(self):
+        r = Registry()
+        con = r.connect(sqlite3, ":memory:")
+        self.assertEqual(0, con.session.query(State).count())
 
-class IntialiserTest(Initialiser, unittest.TestCase):
+        n = initialise(con.session)
+        self.assertNotEqual(0, n)
+        self.assertGreaterEqual(n, con.session.query(State).count())
 
-    def test_db_is_initialised_on_connect(self):
-        engine = self.connect(sqlite3, ":memory:")
-        session = Session()
-        nStates = len([s for m in fsms for s in m.values])
-        self.assertEqual(nStates, session.query(State).count())
+        self.assertEqual(0, initialise(con.session))
+        
+    def test_connect_and_disconnect(self):
+        r = Registry()
+        con = r.connect(sqlite3, ":memory:")
+
+        dup = r.connect(sqlite3, ":memory:")
+        self.assertIs(con.engine, dup.engine)
+
+        dis = r.disconnect(sqlite3, ":memory:")
+        self.assertIs(dup.engine, dis.engine)
+        self.assertIs(None, dis.session)
+        
+        dup = r.connect(sqlite3, ":memory:")
+        self.assertIsNot(con.engine, dup.engine)

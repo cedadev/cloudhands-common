@@ -1,8 +1,10 @@
 #!/usr/bin/env python3
 #   encoding: UTF-8
 
+from collections import namedtuple
 from itertools import chain
 import logging
+import sqlite3
 import uuid
 
 import sqlalchemy
@@ -16,13 +18,11 @@ from cloudhands.common.schema import metadata
 from cloudhands.common.schema import Component
 from cloudhands.common.schema import State
 
-Session = sessionmaker()
+Connection = namedtuple("Connection", ["module", "path", "engine", "session"])
 
-
-class SQLite3Client(object):
+class SQLite3Connector(object):
     """
-    A mixin class which sets up a connection to a SQLite3 database
-    and binds it through SQLAlchemy to this module's Session class.
+    A functor which sets up a SQLALchemy connection to a SQLite3 database.
     """
 
     @staticmethod
@@ -31,9 +31,9 @@ class SQLite3Client(object):
 
     @staticmethod
     def on_connect(dbapi_con, con_record):
-        SQLite3Client.sqlite_fk_pragma(dbapi_con, con_record)
+        SQLite3Connector.sqlite_fk_pragma(dbapi_con, con_record)
 
-    def connect(self, module, path):
+    def __call__(self, module, path):
         """
         Creates, configures and returns a SQLAlchemy engine connected
         to a SQLite3 database.
@@ -46,26 +46,48 @@ class SQLite3Client(object):
         sqlalchemy.event.listen(engine, "connect", self.on_connect)
         metadata.bind = engine
         metadata.create_all()
-        Session.configure(bind=engine)
         return engine
 
 
-class Initialiser(SQLite3Client):
+class Registry(object):
+
+    _shared_state = {}
+
+    connectors = {
+        sqlite3: SQLite3Connector,
+    }
+
+    def __init__(self):
+        self.__dict__ = self._shared_state
+        if not hasattr(self, "_engines"):
+            self._engines = {}
 
     def connect(self, module, path):
-        log = logging.getLogger("cloudhands.common.initialiser")
-        engine = super().connect(module, path)
-        session = Session(autoflush=False)
+        if (module, path) not in self._engines:
+            connector = self.connectors[module]()
+            self._engines[(module, path)] = connector(module, path)
+        engine = self._engines[(module, path)]
+        session = sessionmaker(bind=engine)(autoflush=False)
+        return Connection(module, path, engine, session)
 
-        items = chain(
-            (State(fsm=m.table, name=s) for m in fsms for s in m.values),
-            (Component(uuid=uuid.uuid4().hex, handle=i) for i in (burstCtrl,))
-            )
-        for i in items:  # Add them individually to permit schema changes
-            try:
-                session.add(i)
-                session.commit()
-            except Exception as e:
-                session.rollback()
-                log.debug(e)
-        return engine
+    def disconnect(self, module, path):
+        engine = self._engines.pop((module, path), None)
+        return Connection(module, path, engine, None)
+
+
+def initialise(session):
+    log = logging.getLogger("cloudhands.common.initialise")
+    items = chain(
+        (State(fsm=m.table, name=s) for m in fsms for s in m.values),
+        (Component(uuid=uuid.uuid4().hex, handle=i) for i in (burstCtrl,))
+        )
+    n = 0
+    for i in items:  # Add them individually to permit schema changes
+        try:
+            session.add(i)
+            session.commit()
+            n += 1
+        except Exception as e:
+            session.rollback()
+            log.debug(e)
+    return n

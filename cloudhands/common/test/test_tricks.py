@@ -6,8 +6,8 @@ import sqlite3
 import unittest
 import uuid
 
-from cloudhands.common.connectors import SQLite3Client
-from cloudhands.common.connectors import Session
+from cloudhands.common.connectors import initialise
+from cloudhands.common.connectors import Registry
 
 from cloudhands.common.fsm import HostState
 from cloudhands.common.fsm import MembershipState
@@ -26,21 +26,24 @@ from cloudhands.common.tricks import allocate_ip
 from cloudhands.common.tricks import create_user_grant_email_membership
 from cloudhands.common.tricks import handle_from_email
 
-class TestUserMembership(SQLite3Client, unittest.TestCase):
+class TestUserMembership(unittest.TestCase):
 
     def setUp(self):
-        """ Every test gets its own in-memory database """
-        self.engine = self.connect(sqlite3, ":memory:")
-        session = Session()
+        """ Populate test database"""
+        session = Registry().connect(sqlite3, ":memory:").session
         session.add_all(
             State(fsm=MembershipState.table, name=v)
             for v in MembershipState.values)
         session.add(Organisation(name="TestOrg"))
         session.commit()
 
+    def tearDown(self):
+        """ Every test gets its own in-memory database """
+        r = Registry()
+        r.disconnect(sqlite3, ":memory:")
+
     def test_quick_add_user(self):
-        session = Session()
-        session.autoflush = False   # http://stackoverflow.com/a/4202016
+        session = Registry().connect(sqlite3, ":memory:").session
         oName = "TestOrg"
         eAddr = "my.name@test.org"
 
@@ -52,7 +55,7 @@ class TestUserMembership(SQLite3Client, unittest.TestCase):
             EmailAddress).filter(EmailAddress.value == eAddr).first())
 
     def test_add_duplicate_user(self):
-        session = Session()
+        session = Registry().connect(sqlite3, ":memory:").session
         session.autoflush = False   # http://stackoverflow.com/a/4202016
         oName = "TestOrg"
         eAddr = "my.name@test.org"
@@ -64,12 +67,11 @@ class TestUserMembership(SQLite3Client, unittest.TestCase):
         self.assertIsNone(create_user_grant_email_membership(
             session, org, eAddr, handle))
 
-class TestResourceManagement(SQLite3Client, unittest.TestCase):
+class TestResourceManagement(unittest.TestCase):
 
     def setUp(self):
-        """ Every test gets its own in-memory database """
-        self.engine = self.connect(sqlite3, ":memory:")
-        session = Session()
+        """ Populate test database"""
+        session = Registry().connect(sqlite3, ":memory:").session
         session.add_all(
             State(fsm=HostState.table, name=v)
             for v in HostState.values)
@@ -79,8 +81,13 @@ class TestResourceManagement(SQLite3Client, unittest.TestCase):
         session.add(Organisation(name="TestOrg"))
         session.commit()
 
+    def tearDown(self):
+        """ Every test gets its own in-memory database """
+        r = Registry()
+        r.disconnect(sqlite3, ":memory:")
+
     def test_reallocate_ip(self):
-        session = Session()
+        session = Registry().connect(sqlite3, ":memory:").session
         session.autoflush = False   # http://stackoverflow.com/a/4202016
         oName = "TestOrg"
         eAddr = "my.name@test.org"
