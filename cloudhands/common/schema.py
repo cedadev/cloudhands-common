@@ -141,7 +141,7 @@ class Touch(Base):
     artifact = relationship("Artifact")
     actor = relationship("Actor")
     state = relationship("State")
-    resources = relationship("Resource")
+    resources = relationship("Resource", cascade="all, delete-orphan")
 
 
 class Resource(Base):
@@ -188,7 +188,13 @@ class Node(Resource):
     __mapper_args__ = {"polymorphic_identity": "node"}
 
 
-class State(Base):
+class Serializable(object):
+
+    def as_dict(self):
+        return {c.name: getattr(self, c.name) for c in self.__table__.columns}
+
+
+class State(Base, Serializable):
     """
     State machines which persist their state in the database declare themselves
     using this table.
