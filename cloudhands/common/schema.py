@@ -25,7 +25,7 @@ class Organisation(Base):
 
     id = Column("id", Integer, nullable=False, primary_key=True)
     name = Column("name", String(length=64), nullable=False, unique=True)
-    
+
     hosts = relationship("Host")
     memberships = relationship("Membership")
 

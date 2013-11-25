@@ -26,6 +26,7 @@ from cloudhands.common.tricks import allocate_ip
 from cloudhands.common.tricks import create_user_grant_email_membership
 from cloudhands.common.tricks import handle_from_email
 
+
 class TestUserMembership(unittest.TestCase):
 
     def setUp(self):
@@ -66,6 +67,7 @@ class TestUserMembership(unittest.TestCase):
         user = create_user_grant_email_membership(session, org, eAddr, handle)
         self.assertIsNone(create_user_grant_email_membership(
             session, org, eAddr, handle))
+
 
 class TestResourceManagement(unittest.TestCase):
 

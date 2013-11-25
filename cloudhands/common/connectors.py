@@ -20,6 +20,7 @@ from cloudhands.common.schema import State
 
 Connection = namedtuple("Connection", ["module", "path", "engine", "session"])
 
+
 class SQLite3Connector(object):
     """
     A functor which sets up a SQLALchemy connection to a SQLite3 database.

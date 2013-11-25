@@ -21,12 +21,15 @@ __doc__ = """
 Common functions for interacting with the schema.
 """
 
+
 def handle_from_email(addrVal):
     return ' '.join(
         i.capitalize() for i in addrVal.split('@')[0].split('.'))
 
+
 def create_user_grant_email_membership(
-    session, org, addrVal, handle, role="user"):
+    session, org, addrVal, handle, role="user"
+):
     """
     Creates a new user account from an email address. The sequence of
     operations is:
@@ -39,7 +42,7 @@ def create_user_grant_email_membership(
     :param object session:  A SQLALchemy database session.
     :param Organisation org:    The organisation to join.
     :param string addrVal:   The user's email address.
-    :param string handle:   Becomes the user's handle. If not supplied, 
+    :param string handle:   Becomes the user's handle. If not supplied,
                             handle is constructed from the `addrVal`.
     :param string role: Membership role.
     :returns: The newly created User object.
@@ -80,6 +83,7 @@ def create_user_grant_email_membership(
     session.add(ea)
     session.commit()
     return user
+
 
 def allocate_ip(session, host, ipAddr):
     session.query(IPAddress).filter(IPAddress.value == ipAddr).delete()
