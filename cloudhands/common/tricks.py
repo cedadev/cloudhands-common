@@ -32,7 +32,7 @@ def create_user_from_email(session, addrVal, handle, invitation):
     Creates a new user account from an email address and an invitation.
     The sequence of operations is:
 
-    1.  Find or create a User record.
+    1.  Create a User record.
     2.  Create an EmailAddress resource
     3.  Touch the invitation with the user, the email, and a state of `active`.
 

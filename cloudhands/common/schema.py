@@ -32,7 +32,14 @@ class Organisation(Base):
 
 class Artifact(Base):
     """
-    .. TODO: Add entry point for artifacts
+    This is the base table for all artifacts (products) of the system.
+
+    Artifacts are created with globally unique `uuids` so their identity can
+    be maintained across sharded databases.
+
+    Concrete classes define their own tables according to SQLAlchemy's
+    `joined-table inheritance`_.
+
     """
     __tablename__ = "artifacts"
 
@@ -60,6 +67,12 @@ class DCStatus(Artifact):
 
 
 class Membership(Artifact):
+    """
+    No user may interact with the system without specific membership
+    privileges. The user account accumulates credentials against a
+    membership object. The membership defines the role a user may operate
+    within an `organisation`.
+    """
     __tablename__ = "memberships"
 
     id = Column("id", Integer, ForeignKey("artifacts.id"),
@@ -75,6 +88,12 @@ class Membership(Artifact):
 
 
 class Host(Artifact):
+    """
+    A Host is a computational asset. To be useful, a host must be sited on a
+    functioning node, with a configured network. It must be installed with a
+    particular operating system and software packages. The correct data
+    sources must be mounted and the right users given access.
+    """
     __tablename__ = "hosts"
 
     id = Column("id", Integer, ForeignKey("artifacts.id"),
@@ -91,8 +110,12 @@ class Host(Artifact):
 
 class Actor(Base):
     """
-    This is the base table for all actors in the system. Concrete classes
-    define their own tables according to SQLAlchemy's
+    This is the base table for all actors in the system.
+
+    Actors are created with globally unique `uuids` so their identity can
+    be maintained across sharded databases.
+
+    Concrete classes define their own tables according to SQLAlchemy's
     `joined-table inheritance`_.
 
     .. _joined-table inheritance: http://docs.sqlalchemy.org/en/latest/orm\
@@ -112,6 +135,9 @@ class Actor(Base):
 
 
 class User(Actor):
+    """
+    Stores human users of the system.
+    """
     __tablename__ = "users"
 
     id = Column("id", Integer, ForeignKey("actors.id"),
@@ -121,6 +147,9 @@ class User(Actor):
 
 
 class Component(Actor):
+    """
+    A registry for those parts of the system which take autonomous action.
+    """
     __tablename__ = "components"
 
     id = Column("id", Integer, ForeignKey("actors.id"),
@@ -145,6 +174,17 @@ class Touch(Base):
 
 
 class Resource(Base):
+    """
+    This is the base table for all resources in the system.
+
+    Resources are created with globally unique `uris` so their identity can
+    be maintained across sharded databases.
+
+    Every resource has a `provider`.
+
+    Concrete classes define their own tables according to SQLAlchemy's
+    `joined-table inheritance`_.
+    """
     __tablename__ = "resources"
 
     id = Column("id", Integer, ForeignKey("touches.id"), primary_key=True)
