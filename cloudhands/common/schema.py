@@ -67,7 +67,7 @@ class Membership(Artifact):
     organisation_id = Column(
         "organisation_id", Integer, ForeignKey("organisations.id"),
         nullable=False)
-    role = Column("role", String(length=32), nullable=False, unique=True)
+    role = Column("role", String(length=32), nullable=False)
 
     organisation = relationship("Organisation")
 

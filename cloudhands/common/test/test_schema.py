@@ -124,28 +124,28 @@ class TestMembershipFSM(unittest.TestCase):
             model=cloudhands.common.__version__,
             organisation=org,
             role="user")
-        ungrant = session.query(MembershipState).filter(
-            MembershipState.name == "ungranted").one()
+        invite = session.query(MembershipState).filter(
+            MembershipState.name == "invite").one()
         mship.changes.append(
-            Touch(artifact=mship, actor=user, state=ungrant, at=then))
+            Touch(artifact=mship, actor=user, state=invite, at=then))
         session.add(mship)
         session.commit()
 
-        self.assertIs(mship.changes[0].state, ungrant)
-        self.assertIs(session.query(Touch).first().state, ungrant)
+        self.assertIs(mship.changes[0].state, invite)
+        self.assertIs(session.query(Touch).first().state, invite)
         self.assertEqual(session.query(Touch).count(), 1)
 
         now = datetime.datetime.utcnow()
         self.assertTrue(now > then)
-        grant = session.query(MembershipState).filter(
-            MembershipState.name == "granted").one()
+        active = session.query(MembershipState).filter(
+            MembershipState.name == "active").one()
         mship.changes.append(
-            Touch(artifact=mship, actor=user, state=grant, at=now))
+            Touch(artifact=mship, actor=user, state=active, at=now))
         session.commit()
 
-        self.assertIs(mship.changes[1].state, grant)
+        self.assertIs(mship.changes[1].state, active)
         self.assertIs(
-            session.query(Touch).order_by(Touch.at)[-1].state, grant)
+            session.query(Touch).order_by(Touch.at)[-1].state, active)
         self.assertEqual(session.query(Touch).count(), 2)
 
         self.assertEqual(

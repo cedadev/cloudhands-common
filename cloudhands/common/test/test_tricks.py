@@ -23,7 +23,7 @@ from cloudhands.common.schema import Touch
 from cloudhands.common.schema import User
 
 from cloudhands.common.tricks import allocate_ip
-from cloudhands.common.tricks import create_user_grant_email_membership
+from cloudhands.common.tricks import create_user_from_email
 from cloudhands.common.tricks import handle_from_email
 
 
@@ -50,8 +50,13 @@ class TestUserMembership(unittest.TestCase):
 
         org = session.query(
             Organisation).filter(Organisation.name == oName).one()
+        invitation = Membership(
+            uuid=uuid.uuid4().hex,
+            model=cloudhands.common.__version__,
+            organisation=org,
+            role="user")
         handle = handle_from_email(eAddr)
-        user = create_user_grant_email_membership(session, org, eAddr, handle)
+        user = create_user_from_email(session, eAddr, handle, invitation)
         self.assertIs(user, session.query(User).join(Touch).join(
             EmailAddress).filter(EmailAddress.value == eAddr).first())
 
@@ -63,10 +68,20 @@ class TestUserMembership(unittest.TestCase):
 
         org = session.query(
             Organisation).filter(Organisation.name == oName).one()
+        invitation = Membership(
+            uuid=uuid.uuid4().hex,
+            model=cloudhands.common.__version__,
+            organisation=org,
+            role="user")
         handle = handle_from_email(eAddr)
-        user = create_user_grant_email_membership(session, org, eAddr, handle)
-        self.assertIsNone(create_user_grant_email_membership(
-            session, org, eAddr, handle))
+        user = create_user_from_email(session, eAddr, handle, invitation)
+        reInvitation = Membership(
+            uuid=uuid.uuid4().hex,
+            model=cloudhands.common.__version__,
+            organisation=org,
+            role="user")
+        self.assertIsNone(create_user_from_email(
+            session, eAddr, handle, reInvitation))
 
 
 class TestResourceManagement(unittest.TestCase):
@@ -98,8 +113,13 @@ class TestResourceManagement(unittest.TestCase):
 
         org = session.query(
             Organisation).filter(Organisation.name == oName).one()
+        invitation = Membership(
+            uuid=uuid.uuid4().hex,
+            model=cloudhands.common.__version__,
+            organisation=org,
+            role="user")
         handle = handle_from_email(eAddr)
-        user = create_user_grant_email_membership(session, org, eAddr, handle)
+        user = create_user_from_email(session, eAddr, handle, invitation)
 
         scheduling = session.query(HostState).filter(
             HostState.name == "scheduling").one()

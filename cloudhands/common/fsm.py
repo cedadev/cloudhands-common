@@ -10,4 +10,4 @@ HostState = fsm_factory(
     "host", ["requested", "scheduling", "unknown", "up", "down"])
 
 MembershipState = fsm_factory(
-    "membership", ["ungranted", "granted", "expired", "withdrawn"])
+    "membership", ["invite", "active", "expired", "withdrawn"])
