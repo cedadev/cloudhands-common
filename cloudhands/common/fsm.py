@@ -11,4 +11,3 @@ HostState = fsm_factory(
 
 MembershipState = fsm_factory(
     "membership", ["invite", "active", "expired", "withdrawn"])
-#"""{}""".format(' '.join(MembershipState.values))
