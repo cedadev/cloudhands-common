@@ -93,7 +93,7 @@ class Host(Artifact):
     functioning node, with a configured network. It must be installed with a
     particular operating system and software packages. The correct data
     sources must be mounted and the right users given access. All this is
-    represented by a Host record.
+    represented by a Host record and its resources.
     """
     __tablename__ = "hosts"
 
