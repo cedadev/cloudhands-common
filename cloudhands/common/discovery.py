@@ -21,15 +21,13 @@ def discover(id):
             yield (ep.name, obj)
 
 fsms = [i[1] for i in discover("jasmin.component.fsm")]
-"""
-This is the collection of all discovered state machines.
+"""This is the collection of all discovered state machines.
 Each entry point declared as a ``jasmin.component.fsm`` should be a class
 you have generated with :py:func:`cloudhands.common.schema.fsm_factory`.
 """
 
 settings = dict(discover("jasmin.site.settings"))
-"""
-This is the collection of all discovered key-value mappings.
+"""This is the collection of all discovered key-value mappings.
 Each entry point declared as a ``jasmin.site.settings`` should be a python
 ConfigParser_ object. Its name is used as the `provider` string.
 
@@ -37,8 +35,7 @@ ConfigParser_ object. Its name is used as the `provider` string.
 """
 
 bundles = [i[1] for i in discover("jasmin.ssl.bundle")]
-"""
-This is the collection of all discovered certificate bundles.
+"""This is the collection of all discovered certificate bundles.
 Each entry point declared as a ``jasmin.ssl.bundle`` should be a file
 path.
 """

@@ -69,8 +69,8 @@ class DCStatus(Artifact):
 class Membership(Artifact):
     """
     No user may interact with the system without specific membership
-    privileges. The user account accumulates credentials against a
-    membership object. The membership defines the role a user may operate
+    privileges. The user accumulates credentials against a
+    membership record. The membership defines the role a user may operate
     within an `organisation`.
     """
     __tablename__ = "memberships"
@@ -92,7 +92,8 @@ class Host(Artifact):
     A Host is a computational asset. To be useful, a host must be sited on a
     functioning node, with a configured network. It must be installed with a
     particular operating system and software packages. The correct data
-    sources must be mounted and the right users given access.
+    sources must be mounted and the right users given access. All this is
+    represented by a Host record.
     """
     __tablename__ = "hosts"
 
@@ -177,10 +178,11 @@ class Resource(Base):
     """
     This is the base table for all resources in the system.
 
-    Resources are created with globally unique `uris` so their identity can
+    Resources can have globally unique `uris` if their identity must
     be maintained across sharded databases.
 
-    Every resource has a `provider`.
+    Every resource has a `provider`. It is common for some resource values
+    to be unique within a provider.
 
     Concrete classes define their own tables according to SQLAlchemy's
     `joined-table inheritance`_.
@@ -199,6 +201,9 @@ class Resource(Base):
 
 
 class EmailAddress(Resource):
+    """
+    This table stores email addresses. They are expected to be unique.
+    """
     __tablename__ = "emailaddresses"
 
     id = Column("id", Integer, ForeignKey("resources.id"),
@@ -209,6 +214,10 @@ class EmailAddress(Resource):
 
 
 class IPAddress(Resource):
+    """
+    An Internet address. The address is stored as a string; no interpretation
+    (ie: IPv4, IPv6) is placed on the value.
+    """
     __tablename__ = "ipaddresses"
 
     id = Column("id", Integer, ForeignKey("resources.id"),
@@ -219,6 +228,10 @@ class IPAddress(Resource):
 
 
 class Node(Resource):
+    """
+    Represents a physical server, an instance of a virtual machine (VM),
+    root jail, container or other computational resource.
+    """
     __tablename__ = "nodes"
 
     id = Column("id", Integer, ForeignKey("resources.id"),
@@ -226,6 +239,36 @@ class Node(Resource):
     name = Column("name", String(length=64), nullable=False)
 
     __mapper_args__ = {"polymorphic_identity": "node"}
+
+
+class PosixUId(Resource):
+    """
+    The POSIX identity of a user at a particular provider.
+    """
+    __tablename__ = "posixuids"
+
+    id = Column("id", Integer, ForeignKey("resources.id"),
+                nullable=False, primary_key=True)
+    value = Column("value", Integer, nullable=False)
+    name = Column("name", String(length=64), nullable=True)
+    _provider_value_uniq = UniqueConstraint("provider", "value")
+
+    __mapper_args__ = {"polymorphic_identity": "posixuid"}
+
+
+class PosixGId(Resource):
+    """
+    The POSIX identity of a user group at a particular provider.
+    """
+    __tablename__ = "posixgids"
+
+    id = Column("id", Integer, ForeignKey("resources.id"),
+                nullable=False, primary_key=True)
+    value = Column("value", Integer, nullable=False)
+    name = Column("name", String(length=64), nullable=True)
+    _provider_value_uniq = UniqueConstraint("provider", "value")
+
+    __mapper_args__ = {"polymorphic_identity": "posixgid"}
 
 
 class Serializable(object):
