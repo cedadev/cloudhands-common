@@ -54,18 +54,6 @@ class Artifact(Base):
         "polymorphic_on": typ}
 
 
-# TODO: revisit
-class DCStatus(Artifact):
-    __tablename__ = "dcstatus"
-
-    id = Column("id", Integer, ForeignKey("artifacts.id"),
-                nullable=False, primary_key=True)
-    uri = Column("uri", String(length=128), nullable=False)
-    name = Column("name", String(length=128), nullable=False)
-
-    __mapper_args__ = {"polymorphic_identity": "dcstatus"}
-
-
 class Membership(Artifact):
     """
     No user may interact with the system without specific membership
