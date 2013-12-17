@@ -259,6 +259,20 @@ class PosixGId(Resource):
     __mapper_args__ = {"polymorphic_identity": "posixgid"}
 
 
+class PublicKey(Resource):
+    """
+    A test representation of a public key.
+    """
+    __tablename__ = "publickeys"
+
+    id = Column("id", Integer, ForeignKey("resources.id"),
+                nullable=False, primary_key=True)
+    value = Column("value", String(length=512), nullable=False)
+    _provider_value_uniq = UniqueConstraint("provider", "value")
+
+    __mapper_args__ = {"polymorphic_identity": "publickey"}
+
+
 class Serializable(object):
 
     def as_dict(self):
