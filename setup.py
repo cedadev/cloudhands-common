@@ -1,17 +1,27 @@
 #!/usr/bin/env python
 # encoding: UTF-8
 
+import ast
 from setuptools import setup
 import os.path
 
-import cloudhands.common
+
+try:
+    import cloudhands.common.__version__ as version
+except ImportError:
+    # Pip evals this file prior to running setup.
+    # This causes ImportError in a fresh virtualenv.
+    version = str(ast.literal_eval(
+                open(os.path.join(os.path.dirname(__file__),
+                "cloudhands", "common", "__init__.py"),
+                'r').read().split("=")[-1].strip()))
 
 __doc__ = open(os.path.join(os.path.dirname(__file__), "README.rst"),
                "r").read()
 
 setup(
     name="cloudhands-common",
-    version=cloudhands.common.__version__,
+    version=version,
     description="Common definitions for cloudhands PaaS",
     author="D Haynes",
     author_email="david.e.haynes@stfc.ac.uk",
