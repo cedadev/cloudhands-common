@@ -22,6 +22,7 @@ from cloudhands.common.schema import IPAddress
 from cloudhands.common.schema import Membership
 from cloudhands.common.schema import Node
 from cloudhands.common.schema import Organisation
+from cloudhands.common.schema import Provider
 from cloudhands.common.schema import Resource
 from cloudhands.common.schema import State
 from cloudhands.common.schema import Touch
@@ -177,6 +178,8 @@ class TestHostsAndResources(unittest.TestCase):
             State(fsm=HostState.table, name=v)
             for v in HostState.values)
         session.add(Organisation(name="TestOrg"))
+        session.add(Provider(
+            name="testcloud.io", uuid=uuid.uuid4().hex))
         session.commit()
 
     def tearDown(self):
@@ -220,9 +223,10 @@ class TestHostsAndResources(unittest.TestCase):
 
         # 3. Burst controller raises a node
         now = datetime.datetime.utcnow()
+        provider = session.query(Provider).one()
         act = Touch(artifact=host, actor=user, state=scheduling, at=now)
         host.changes.append(act)
-        node = Node(name=host.name, touch=act, provider="mycloud")
+        node = Node(name=host.name, touch=act, provider=provider)
         session.add(node)
         session.commit()
 
@@ -230,7 +234,7 @@ class TestHostsAndResources(unittest.TestCase):
         now = datetime.datetime.utcnow()
         act = Touch(artifact=host, actor=user, state=scheduling, at=now)
         host.changes.append(act)
-        ip = IPAddress(value="192.168.1.4", touch=act, provider="mycloud")
+        ip = IPAddress(value="192.168.1.4", touch=act, provider=provider)
         session.add(ip)
         self.assertIn(act, session)
         session.commit()
