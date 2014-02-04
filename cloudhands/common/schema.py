@@ -162,6 +162,29 @@ class Touch(Base):
     resources = relationship("Resource", cascade="all, delete-orphan")
 
 
+class Provider(Base):
+    """
+    This is the base table for all providers in the system.
+
+    Providers are created with globally unique `uuids` so their identity can
+    be maintained across sharded databases.
+
+    Concrete classes define their own tables according to SQLAlchemy's
+    `joined-table inheritance`_.
+    """
+
+    __tablename__ = "providers"
+
+    id = Column("id", Integer(), nullable=False, primary_key=True)
+    typ = Column("typ", String(length=32), nullable=False)
+    uuid = Column("uuid", CHAR(length=32), nullable=False, unique=True)
+    name = Column("name", String(length=64), nullable=True, unique=True)
+
+    __mapper_args__ = {
+        "polymorphic_identity": "provider",
+        "polymorphic_on": typ}
+
+
 class Resource(Base):
     """
     This is the base table for all resources in the system.
@@ -179,9 +202,12 @@ class Resource(Base):
 
     id = Column("id", Integer, ForeignKey("touches.id"), primary_key=True)
     typ = Column("typ", String(length=32), nullable=False)
-    provider = Column("provider", String(length=32), nullable=False)
+    provider_id = Column(
+        "provider_id", Integer, ForeignKey("providers.id"), nullable=True)
     uri = Column("uri", String(length=128), nullable=True, unique=True)
     touch = relationship("Touch")
+
+    provider = relationship("Provider")
 
     __mapper_args__ = {
         "polymorphic_identity": "resource",
