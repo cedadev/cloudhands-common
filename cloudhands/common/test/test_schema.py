@@ -253,5 +253,12 @@ class TestHostsAndResources(unittest.TestCase):
         self.assertIn(ip, resources)
 
 
+class TestOrganisationsAndProviders(unittest.TestCase):
+
+    def test_organisation_subscribes_to_archive(self):
+        raise NotImplementedError
+
+
+
 if __name__ == "__main__":
     unittest.main()

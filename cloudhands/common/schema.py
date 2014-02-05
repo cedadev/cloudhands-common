@@ -185,6 +185,31 @@ class Provider(Base):
         "polymorphic_on": typ}
 
 
+class Archive(Provider):
+    __tablename__ = "archives"
+
+    id = Column("id", Integer, ForeignKey("providers.id"),
+                nullable=False, primary_key=True)
+    name = Column("value", String(length=128), nullable=False, unique=True)
+
+    __mapper_args__ = {"polymorphic_identity": "archive"}
+
+
+class Subscription(Base):
+    """
+    Represents the relationship between an organisation and a provider
+    """
+    __tablename__ = "subscriptions"
+
+    id = Column("id", Integer(), nullable=False, primary_key=True)
+    organisation_id = Column(
+        "organisation_id", Integer, ForeignKey("organisations.id"))
+    provider_id = Column("provider_id", Integer, ForeignKey("providers.id"))
+
+    organisation = relationship("Organisation")
+    provider = relationship("Provider")
+
+
 class Resource(Base):
     """
     This is the base table for all resources in the system.
@@ -212,6 +237,22 @@ class Resource(Base):
     __mapper_args__ = {
         "polymorphic_identity": "resource",
         "polymorphic_on": typ}
+
+
+class Directory(Resource):
+    """
+    This table stores email addresses. They are expected to be unique.
+    """
+    __tablename__ = "directories"
+
+    id = Column("id", Integer, ForeignKey("resources.id"),
+                nullable=False, primary_key=True)
+    description = Column(
+        "description", String(length=64), nullable=False)
+    mount_path = Column(
+        "mount_path", String(length=256), nullable=False, unique=True)
+
+    __mapper_args__ = {"polymorphic_identity": "emailaddress"}
 
 
 class EmailAddress(Resource):
