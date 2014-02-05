@@ -277,7 +277,7 @@ class TestOrganisationsAndProviders(unittest.TestCase):
     def test_organisation_subscribes_to_archive(self):
         session = Registry().connect(sqlite3, ":memory:").session
         archive = session.query(Archive).filter(
-            Archive.name=="NITS").first()
+            Archive.name == "NITS").first()
         self.assertTrue(archive)
         org = session.query(Organisation).one()
         subs = Subscription(organisation=org, provider=archive)
@@ -286,13 +286,14 @@ class TestOrganisationsAndProviders(unittest.TestCase):
 
         self.assertEqual(
             1, session.query(Subscription, Organisation, Archive).filter(
-            Organisation.id==org.id).filter(Archive.id==archive.id).count())
+            Organisation.id == org.id).filter(
+            Archive.id == archive.id).count())
         self.assertEqual(1, len(org.subscriptions))
 
     def test_organisation_oversubscribes_to_archive(self):
         session = Registry().connect(sqlite3, ":memory:").session
         archive = session.query(Archive).filter(
-            Archive.name=="NITS").first()
+            Archive.name == "NITS").first()
         self.assertTrue(archive)
         org = session.query(Organisation).one()
         subs = [
@@ -307,7 +308,7 @@ class TestOrganisationsAndProviders(unittest.TestCase):
     def test_organisation_unsubscribes_from_archive(self):
         session = Registry().connect(sqlite3, ":memory:").session
         archive = session.query(Archive).filter(
-            Archive.name=="NITS").first()
+            Archive.name == "NITS").first()
         self.assertTrue(archive)
         org = session.query(Organisation).one()
         subs = Subscription(organisation=org, provider=archive)
@@ -315,20 +316,21 @@ class TestOrganisationsAndProviders(unittest.TestCase):
         session.commit()
 
         session.query(Subscription).filter(
-            Subscription.organisation_id==org.id).filter(
-            Subscription.provider_id==archive.id).delete()
+            Subscription.organisation_id == org.id).filter(
+            Subscription.provider_id == archive.id).delete()
         session.commit()
 
         self.assertEqual(
             0, session.query(Subscription, Organisation, Archive).filter(
-            Organisation.id==org.id).filter(Archive.id==archive.id).count())
+            Organisation.id == org.id).filter(
+            Archive.id == archive.id).count())
         session.rollback()
         self.assertEqual(0, len(org.subscriptions))
 
     def test_delete_organisation_removes_subscription(self):
         session = Registry().connect(sqlite3, ":memory:").session
         archive = session.query(Archive).filter(
-            Archive.name=="NITS").first()
+            Archive.name == "NITS").first()
         self.assertTrue(archive)
         org = session.query(Organisation).one()
         subs = Subscription(organisation=org, provider=archive)
@@ -341,6 +343,52 @@ class TestOrganisationsAndProviders(unittest.TestCase):
 
         self.assertEqual(0, session.query(Organisation).count())
         self.assertEqual(0, session.query(Subscription).count())
+
+
+class TestDirectoryResources(unittest.TestCase):
+
+    def setUp(self):
+        """ Populate test database"""
+        session = Registry().connect(sqlite3, ":memory:").session
+        session.add_all(
+            State(fsm=MembershipState.table, name=v)
+            for v in MembershipState.values)
+        session.add(Organisation(name="TestOrg"))
+        session.add(Archive(
+            name="NITS", uuid=uuid.uuid4().hex))
+        session.commit()
+
+    def tearDown(self):
+        """ Every test gets its own in-memory database """
+        r = Registry()
+        r.disconnect(sqlite3, ":memory:")
+
+    def test_directory_attaches_to_membership(self):
+        session = Registry().connect(sqlite3, ":memory:").session
+        archive = session.query(Archive).filter(
+            Archive.name == "NITS").first()
+        org = session.query(Organisation).one()
+        subs = Subscription(organisation=org, provider=archive)
+        user = User(handle=None, uuid=uuid.uuid4().hex)
+        session.add_all((subs, user))
+        session.commit()
+
+        mship = Membership(
+            uuid=uuid.uuid4().hex,
+            model=cloudhands.common.__version__,
+            organisation=org,
+            role="user")
+        now = datetime.datetime.utcnow()
+        invite = session.query(MembershipState).filter(
+            MembershipState.name == "invite").one()
+        mship.changes.append(
+            Touch(artifact=mship, actor=user, state=invite, at=now))
+        session.add(mship)
+        session.commit()
+
+        for subs in org.subscriptions:
+            self.fail("TODO: add Directory to Membership")
+
 
 
 if __name__ == "__main__":

@@ -254,7 +254,7 @@ class Directory(Resource):
     mount_path = Column(
         "mount_path", String(length=256), nullable=False, unique=True)
 
-    __mapper_args__ = {"polymorphic_identity": "emailaddress"}
+    __mapper_args__ = {"polymorphic_identity": "directory"}
 
 
 class EmailAddress(Resource):
