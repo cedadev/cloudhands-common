@@ -29,6 +29,7 @@ class Organisation(Base):
 
     hosts = relationship("Host")
     memberships = relationship("Membership")
+    subscriptions = relationship("Subscription", cascade="all, delete")
 
 
 class Artifact(Base):

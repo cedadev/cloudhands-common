@@ -287,7 +287,7 @@ class TestOrganisationsAndProviders(unittest.TestCase):
         self.assertEqual(
             1, session.query(Subscription, Organisation, Archive).filter(
             Organisation.id==org.id).filter(Archive.id==archive.id).count())
-
+        self.assertEqual(1, len(org.subscriptions))
 
     def test_organisation_oversubscribes_to_archive(self):
         session = Registry().connect(sqlite3, ":memory:").session
@@ -301,6 +301,46 @@ class TestOrganisationsAndProviders(unittest.TestCase):
         session.add_all(subs)
         self.assertRaises(
             sqlalchemy.exc.IntegrityError, session.commit)
+        session.rollback()
+        self.assertEqual(0, len(org.subscriptions))
+
+    def test_organisation_unsubscribes_from_archive(self):
+        session = Registry().connect(sqlite3, ":memory:").session
+        archive = session.query(Archive).filter(
+            Archive.name=="NITS").first()
+        self.assertTrue(archive)
+        org = session.query(Organisation).one()
+        subs = Subscription(organisation=org, provider=archive)
+        session.add(subs)
+        session.commit()
+
+        session.query(Subscription).filter(
+            Subscription.organisation_id==org.id).filter(
+            Subscription.provider_id==archive.id).delete()
+        session.commit()
+
+        self.assertEqual(
+            0, session.query(Subscription, Organisation, Archive).filter(
+            Organisation.id==org.id).filter(Archive.id==archive.id).count())
+        session.rollback()
+        self.assertEqual(0, len(org.subscriptions))
+
+    def test_delete_organisation_removes_subscription(self):
+        session = Registry().connect(sqlite3, ":memory:").session
+        archive = session.query(Archive).filter(
+            Archive.name=="NITS").first()
+        self.assertTrue(archive)
+        org = session.query(Organisation).one()
+        subs = Subscription(organisation=org, provider=archive)
+        session.add(subs)
+        session.commit()
+        self.assertEqual(1, len(org.subscriptions))
+
+        session.delete(org)
+        session.commit()
+
+        self.assertEqual(0, session.query(Organisation).count())
+        self.assertEqual(0, session.query(Subscription).count())
 
 
 if __name__ == "__main__":
