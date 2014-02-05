@@ -5,6 +5,7 @@ from sqlalchemy import Column
 from sqlalchemy import DateTime
 from sqlalchemy import ForeignKey
 from sqlalchemy import Integer
+from sqlalchemy import PrimaryKeyConstraint
 from sqlalchemy import String
 from sqlalchemy import UniqueConstraint
 from sqlalchemy.ext.declarative import declarative_base
@@ -200,8 +201,8 @@ class Subscription(Base):
     Represents the relationship between an organisation and a provider
     """
     __tablename__ = "subscriptions"
+    __table_args__ = (PrimaryKeyConstraint("organisation_id", "provider_id"),)
 
-    id = Column("id", Integer(), nullable=False, primary_key=True)
     organisation_id = Column(
         "organisation_id", Integer, ForeignKey("organisations.id"))
     provider_id = Column("provider_id", Integer, ForeignKey("providers.id"))

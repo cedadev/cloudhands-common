@@ -16,6 +16,8 @@ from cloudhands.common.fsm import HostState
 from cloudhands.common.fsm import MembershipState
 
 import cloudhands.common.schema
+from cloudhands.common.schema import Archive
+from cloudhands.common.schema import Directory
 from cloudhands.common.schema import EmailAddress
 from cloudhands.common.schema import Host
 from cloudhands.common.schema import IPAddress
@@ -25,6 +27,7 @@ from cloudhands.common.schema import Organisation
 from cloudhands.common.schema import Provider
 from cloudhands.common.schema import Resource
 from cloudhands.common.schema import State
+from cloudhands.common.schema import Subscription
 from cloudhands.common.schema import Touch
 from cloudhands.common.schema import User
 
@@ -255,9 +258,49 @@ class TestHostsAndResources(unittest.TestCase):
 
 class TestOrganisationsAndProviders(unittest.TestCase):
 
-    def test_organisation_subscribes_to_archive(self):
-        raise NotImplementedError
+    def setUp(self):
+        """ Populate test database"""
+        session = Registry().connect(sqlite3, ":memory:").session
+        session.add_all(
+            State(fsm=MembershipState.table, name=v)
+            for v in MembershipState.values)
+        session.add(Organisation(name="TestOrg"))
+        session.add(Archive(
+            name="NITS", uuid=uuid.uuid4().hex))
+        session.commit()
 
+    def tearDown(self):
+        """ Every test gets its own in-memory database """
+        r = Registry()
+        r.disconnect(sqlite3, ":memory:")
+
+    def test_organisation_subscribes_to_archive(self):
+        session = Registry().connect(sqlite3, ":memory:").session
+        archive = session.query(Archive).filter(
+            Archive.name=="NITS").first()
+        self.assertTrue(archive)
+        org = session.query(Organisation).one()
+        subs = Subscription(organisation=org, provider=archive)
+        session.add(subs)
+        session.commit()
+
+        self.assertEqual(
+            1, session.query(Subscription, Organisation, Archive).filter(
+            Organisation.id==org.id).filter(Archive.id==archive.id).count())
+
+
+    def test_organisation_oversubscribes_to_archive(self):
+        session = Registry().connect(sqlite3, ":memory:").session
+        archive = session.query(Archive).filter(
+            Archive.name=="NITS").first()
+        self.assertTrue(archive)
+        org = session.query(Organisation).one()
+        subs = [
+            Subscription(organisation=org, provider=archive),
+            Subscription(organisation=org, provider=archive)]
+        session.add_all(subs)
+        self.assertRaises(
+            sqlalchemy.exc.IntegrityError, session.commit)
 
 
 if __name__ == "__main__":
