@@ -18,7 +18,6 @@ from cloudhands.common.fsm import MembershipState
 import cloudhands.common.schema
 from cloudhands.common.schema import Archive
 from cloudhands.common.schema import Directory
-from cloudhands.common.schema import EmailAddress
 from cloudhands.common.schema import Host
 from cloudhands.common.schema import IPAddress
 from cloudhands.common.schema import Membership
@@ -386,9 +385,27 @@ class TestDirectoryResources(unittest.TestCase):
         session.add(mship)
         session.commit()
 
+        # illustrates user onboarding - membership gets decorated with
+        # directory resources
+        now = datetime.datetime.utcnow()
         for subs in org.subscriptions:
-            self.fail("TODO: add Directory to Membership")
+            if isinstance(subs.provider, Archive):
+                d = Directory(
+                    description="CEDA data archive",
+                    mount_path="/{mount}/panfs/ceda")  # anticipates templating
+                latest = mship.changes[-1]
+                act = Touch(
+                    artifact=mship, actor=user, state=latest.state, at=now)
+                d.touch = act
+                mship.changes.append(act)
+                session.add(d)
+                session.commit()
 
+        # Check we can get at the resources from the membership
+        self.assertIs(
+            d,
+            session.query(Resource).join(Touch).join(Membership).filter(
+                Membership.id == mship.id).one())
 
 
 if __name__ == "__main__":
