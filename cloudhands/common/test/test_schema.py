@@ -364,6 +364,7 @@ class TestDirectoryResources(unittest.TestCase):
 
     def test_directory_attaches_to_membership(self):
         session = Registry().connect(sqlite3, ":memory:").session
+        session.flush()
         archive = session.query(Archive).filter(
             Archive.name == "NITS").first()
         org = session.query(Organisation).one()
