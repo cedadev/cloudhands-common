@@ -5,7 +5,7 @@ from sqlalchemy import Column
 from sqlalchemy import DateTime
 from sqlalchemy import ForeignKey
 from sqlalchemy import Integer
-from sqlalchemy import PrimaryKeyConstraint
+from sqlalchemy import ForeignKeyConstraint
 from sqlalchemy import String
 from sqlalchemy import UniqueConstraint
 from sqlalchemy.ext.declarative import declarative_base
@@ -97,6 +97,24 @@ class Host(Artifact):
     organisation = relationship("Organisation")
 
     __mapper_args__ = {"polymorphic_identity": "host"}
+
+
+class Subscription(Artifact):
+    """
+    Represents the relationship between an organisation and a provider
+    """
+    __tablename__ = "subscriptions"
+
+    id = Column("id", Integer, ForeignKey("artifacts.id"),
+                nullable=False, primary_key=True)
+    organisation_id = Column(
+        "organisation_id", Integer, ForeignKey("organisations.id"))
+    provider_id = Column("provider_id", Integer, ForeignKey("providers.id"))
+
+    organisation = relationship("Organisation")
+    provider = relationship("Provider")
+
+    __mapper_args__ = {"polymorphic_identity": "subscription"}
 
 
 class Actor(Base):
@@ -197,19 +215,14 @@ class Archive(Provider):
     __mapper_args__ = {"polymorphic_identity": "archive"}
 
 
-class Subscription(Base):
-    """
-    Represents the relationship between an organisation and a provider
-    """
-    __tablename__ = "subscriptions"
-    __table_args__ = (PrimaryKeyConstraint("organisation_id", "provider_id"),)
+class Cloud(Provider):
+    __tablename__ = "clouds"
 
-    organisation_id = Column(
-        "organisation_id", Integer, ForeignKey("organisations.id"))
-    provider_id = Column("provider_id", Integer, ForeignKey("providers.id"))
+    id = Column("id", Integer, ForeignKey("providers.id"),
+                nullable=False, primary_key=True)
+    name = Column("value", String(length=128), nullable=False, unique=True)
 
-    organisation = relationship("Organisation")
-    provider = relationship("Provider")
+    __mapper_args__ = {"polymorphic_identity": "cloud"}
 
 
 class Resource(Base):
