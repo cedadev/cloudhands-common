@@ -66,7 +66,9 @@ class TestMembership(unittest.TestCase):
         session.add_all(
             State(fsm=MembershipState.table, name=v)
             for v in MembershipState.values)
-        session.add(Organisation(name="TestOrg"))
+        session.add(Organisation(
+            uuid=uuid.uuid4().hex,
+            name="TestOrg"))
         session.commit()
 
     def tearDown(self):
@@ -107,7 +109,9 @@ class TestMembershipFSM(unittest.TestCase):
         session.add_all(
             State(fsm=MembershipState.table, name=v)
             for v in MembershipState.values)
-        session.add(Organisation(name="TestOrg"))
+        session.add(Organisation(
+            uuid=uuid.uuid4().hex,
+            name="TestOrg"))
         session.commit()
 
     def tearDown(self):
@@ -179,7 +183,9 @@ class TestHostsAndResources(unittest.TestCase):
         session.add_all(
             State(fsm=HostState.table, name=v)
             for v in HostState.values)
-        session.add(Organisation(name="TestOrg"))
+        session.add(Organisation(
+            uuid=uuid.uuid4().hex,
+            name="TestOrg"))
         session.add(Provider(
             name="testcloud.io", uuid=uuid.uuid4().hex))
         session.commit()
@@ -263,7 +269,9 @@ class TestOrganisationsAndProviders(unittest.TestCase):
         session.add_all(
             State(fsm=MembershipState.table, name=v)
             for v in MembershipState.values)
-        session.add(Organisation(name="TestOrg"))
+        session.add(Organisation(
+            uuid=uuid.uuid4().hex,
+            name="TestOrg"))
         session.add(Archive(
             name="NITS", uuid=uuid.uuid4().hex))
         session.commit()
@@ -370,7 +378,9 @@ class TestDirectoryResources(unittest.TestCase):
         session.add_all(
             State(fsm=MembershipState.table, name=v)
             for v in MembershipState.values)
-        session.add(Organisation(name="TestOrg"))
+        session.add(Organisation(
+            uuid=uuid.uuid4().hex,
+            name="TestOrg"))
         session.add(Archive(
             name="NITS", uuid=uuid.uuid4().hex))
         session.commit()

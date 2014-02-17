@@ -25,6 +25,7 @@ class Organisation(Base):
     __tablename__ = "organisations"
 
     id = Column("id", Integer, nullable=False, primary_key=True)
+    uuid = Column("uuid", CHAR(length=32), nullable=False)
     name = Column("name", String(length=64), nullable=False, unique=True)
 
     hosts = relationship("Host")
