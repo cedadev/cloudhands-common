@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 # encoding: UTF-8
 
+from collections.abc import MutableMapping
 from collections.abc import MutableSequence
 
 import pkg_resources
@@ -26,6 +27,14 @@ Each entry point declared as a ``jasmin.component.fsm`` should be a class
 you have generated with :py:func:`cloudhands.common.schema.fsm_factory`.
 """
 
+providers = dict(discover("jasmin.burst.provider"))
+"""This is the collection of all discovered provider configurations.
+Each entry point declared as a ``jasmin.site.settings`` should be a python
+ConfigParser_ object. Its name is used as the `provider` string.
+
+.. _ConfigParser: http://docs.python.org/3.3/library/configparser.html
+"""
+
 settings = dict(discover("jasmin.site.settings"))
 """This is the collection of all discovered key-value mappings.
 Each entry point declared as a ``jasmin.site.settings`` should be a python
@@ -43,4 +52,5 @@ path.
 
 if __name__ == "__main__":
     print(*["{:^10} {}".format(k, v) for k, v in globals().items()
-          if isinstance(v, MutableSequence)], sep="\n")
+          if isinstance(v, MutableMapping)
+          or isinstance(v, MutableSequence)], sep="\n")
