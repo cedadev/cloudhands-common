@@ -31,7 +31,7 @@ from cloudhands.common.schema import Touch
 from cloudhands.common.schema import User
 
 
-class TestCredentialState(unittest.TestCase):
+class TestSubscriptionState(unittest.TestCase):
 
     def tearDown(self):
         """ Every test gets its own in-memory database """
@@ -41,8 +41,8 @@ class TestCredentialState(unittest.TestCase):
     def test_duplicate_names(self):
         session = Registry().connect(sqlite3, ":memory:").session
         session.add_all([
-            State(fsm="credential", name="untrusted"),
-            State(fsm="credential", name="untrusted")])
+            State(fsm="subscription", name="unchecked"),
+            State(fsm="subscription", name="unchecked")])
         self.assertRaises(
             sqlalchemy.exc.IntegrityError, session.commit)
 
@@ -50,7 +50,7 @@ class TestCredentialState(unittest.TestCase):
         """ State names can be shared across FSMs """
         session = Registry().connect(sqlite3, ":memory:").session
         session.add_all([
-            State(fsm="credential", name="start"),
+            State(fsm="subscription", name="start"),
             State(fsm="host", name="start")])
         try:
             session.commit()
