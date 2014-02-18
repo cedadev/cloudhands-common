@@ -241,14 +241,14 @@ class Resource(Base):
     """
     __tablename__ = "resources"
 
-    id = Column("id", Integer, ForeignKey("touches.id"), primary_key=True)
+    id = Column("id", Integer(), nullable=False, primary_key=True)
     typ = Column("typ", String(length=32), nullable=False)
     provider_id = Column(
         "provider_id", Integer, ForeignKey("providers.id"), nullable=True)
-    uri = Column("uri", String(length=128), nullable=True, unique=True)
-    touch = relationship("Touch")
+    touch_id = Column("touch_id", Integer, ForeignKey("touches.id"))
 
     provider = relationship("Provider")
+    touch = relationship("Touch")
 
     __mapper_args__ = {
         "polymorphic_identity": "resource",
