@@ -284,6 +284,20 @@ class EmailAddress(Resource):
     __mapper_args__ = {"polymorphic_identity": "emailaddress"}
 
 
+class OSImage(Resource):
+    """
+    This table stores names of Operating System images.
+    They are expected to be unique.
+    """
+    __tablename__ = "osimages"
+
+    id = Column("id", Integer, ForeignKey("resources.id"),
+                nullable=False, primary_key=True)
+    name = Column("name", String(length=128), nullable=False, unique=True)
+
+    __mapper_args__ = {"polymorphic_identity": "osimage"}
+
+
 class IPAddress(Resource):
     """
     An Internet address. The address is stored as a string; no interpretation

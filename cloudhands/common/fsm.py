@@ -10,4 +10,4 @@ MembershipState = fsm_factory(
     "membership", ["invite", "active", "expired", "withdrawn"])
 
 SubscriptionState = fsm_factory(
-    "subscription", ["unchecked", "inactive", "active"])
+    "subscription", ["maintenance", "unchecked", "inactive", "active"])
