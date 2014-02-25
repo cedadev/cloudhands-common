@@ -293,7 +293,7 @@ class OSImage(Resource):
 
     id = Column("id", Integer, ForeignKey("resources.id"),
                 nullable=False, primary_key=True)
-    name = Column("name", String(length=128), nullable=False, unique=True)
+    name = Column("name", String(length=128), nullable=False, unique=False)
 
     __mapper_args__ = {"polymorphic_identity": "osimage"}
 
