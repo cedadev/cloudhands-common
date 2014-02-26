@@ -322,6 +322,7 @@ class Node(Resource):
     id = Column("id", Integer, ForeignKey("resources.id"),
                 nullable=False, primary_key=True)
     name = Column("name", String(length=64), nullable=False)
+    uri = Column("uri", String(length=256), nullable=True, unique=True)
 
     __mapper_args__ = {"polymorphic_identity": "node"}
 
