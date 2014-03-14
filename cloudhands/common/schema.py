@@ -100,6 +100,20 @@ class Host(Artifact):
     __mapper_args__ = {"polymorphic_identity": "host"}
 
 
+class Registration(Artifact):
+    """
+    No user may interact with the system without having registered.
+    The registration is the artifact in use during the onboarding of a
+    new user.
+    """
+    __tablename__ = "registrations"
+
+    id = Column("id", Integer, ForeignKey("artifacts.id"),
+                nullable=False, primary_key=True)
+
+    __mapper_args__ = {"polymorphic_identity": "registration"}
+
+
 class Subscription(Artifact):
     """
     Represents the relationship between an organisation and a provider
@@ -233,7 +247,7 @@ class Resource(Base):
     Resources can have globally unique `uris` if their identity must
     be maintained across sharded databases.
 
-    Every resource has a `provider`. It is common for some resource values
+    Some resources have a `provider`. It is common for some resource values
     to be unique within a provider.
 
     Concrete classes define their own tables according to SQLAlchemy's
@@ -255,9 +269,22 @@ class Resource(Base):
         "polymorphic_on": typ}
 
 
+class BcryptedPassword(Resource):
+    """
+    This table stores passwords as bcrypt hashes
+    """
+    __tablename__ = "bcryptedpasswords"
+
+    id = Column("id", Integer, ForeignKey("resources.id"),
+                nullable=False, primary_key=True)
+    value = Column("value", String(length=60), nullable=False, unique=True)
+
+    __mapper_args__ = {"polymorphic_identity": "bcryptedpassword"}
+
+
 class Directory(Resource):
     """
-    This table stores email addresses. They are expected to be unique.
+    This table stores directory paths.
     """
     __tablename__ = "directories"
 

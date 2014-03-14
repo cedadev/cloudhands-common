@@ -9,5 +9,8 @@ HostState = fsm_factory(
 MembershipState = fsm_factory(
     "membership", ["invite", "active", "expired", "withdrawn"])
 
+RegistrationState = fsm_factory(
+    "registration", ["prepass", "valid", "expired", "withdrawn"])
+
 SubscriptionState = fsm_factory(
     "subscription", ["maintenance", "unchecked", "inactive", "active"])
