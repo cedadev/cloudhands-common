@@ -47,6 +47,7 @@ setup(
         "jasmin.component.fsm": [
             "host = cloudhands.common.fsm:HostState",
             "membership = cloudhands.common.fsm:MembershipState",
+            "registration = cloudhands.common.fsm:RegistrationState",
             "subscription = cloudhands.common.fsm:SubscriptionState",
         ],
     },
