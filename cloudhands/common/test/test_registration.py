@@ -45,15 +45,15 @@ class RegistrationTests(unittest.TestCase):
             uuid=uuid.uuid4().hex,
             model=cloudhands.common.__version__)
 
-        prepass = session.query(RegistrationState).filter(
-            RegistrationState.name == "prepass").one()
+        preconfirm = session.query(RegistrationState).filter(
+            RegistrationState.name == "preconfirm").one()
         reg.changes.append(
-            Touch(artifact=reg, actor=user, state=prepass, at=then))
+            Touch(artifact=reg, actor=user, state=preconfirm, at=then))
         session.add(reg)
         session.commit()
 
-        self.assertIs(reg.changes[0].state, prepass)
-        self.assertIs(session.query(Touch).first().state, prepass)
+        self.assertIs(reg.changes[0].state, preconfirm)
+        self.assertIs(session.query(Touch).first().state, preconfirm)
         self.assertEqual(session.query(Touch).count(), 1)
 
         now = datetime.datetime.utcnow()
