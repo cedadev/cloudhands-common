@@ -325,6 +325,16 @@ class OSImage(Resource):
     __mapper_args__ = {"polymorphic_identity": "osimage"}
 
 
+class SoftwareDefinedNetwork(Resource):
+    __tablename__ = "softwaredefinednetworks"
+
+    id = Column("id", Integer, ForeignKey("resources.id"),
+                nullable=False, primary_key=True)
+    name = Column("name", String(length=32), nullable=False, unique=False)
+
+    __mapper_args__ = {"polymorphic_identity": "softwaredefinednetwork"}
+
+
 class IPAddress(Resource):
     """
     An Internet address. The address is stored as a string; no interpretation
