@@ -14,9 +14,11 @@ from cloudhands.common.connectors import Registry
 
 from cloudhands.common.fsm import HostState
 from cloudhands.common.fsm import MembershipState
+from cloudhands.common.fsm import RegistrationState
 
 import cloudhands.common.schema
 from cloudhands.common.schema import Archive
+from cloudhands.common.schema import Component
 from cloudhands.common.schema import Directory
 from cloudhands.common.schema import Host
 from cloudhands.common.schema import IPAddress
@@ -25,10 +27,12 @@ from cloudhands.common.schema import Node
 from cloudhands.common.schema import Organisation
 from cloudhands.common.schema import OSImage
 from cloudhands.common.schema import Provider
+from cloudhands.common.schema import Registration
 from cloudhands.common.schema import Resource
 from cloudhands.common.schema import SoftwareDefinedNetwork
 from cloudhands.common.schema import State
 from cloudhands.common.schema import Subscription
+from cloudhands.common.schema import TimeInterval
 from cloudhands.common.schema import Touch
 from cloudhands.common.schema import User
 
@@ -510,5 +514,44 @@ class TestDirectoryResources(unittest.TestCase):
                 Membership.id == mship.id).one())
 
 
+class TestTimeInterval(unittest.TestCase):
+
+    def setUp(self):
+        """ Populate test database"""
+        session = Registry().connect(sqlite3, ":memory:").session
+        session.add(
+            Component(handle="Async agent", uuid=uuid.uuid4().hex))
+        session.add_all(
+            State(fsm=RegistrationState.table, name=v)
+            for v in RegistrationState.values)
+        session.commit()
+
+    def tearDown(self):
+        """ Every test gets its own in-memory database """
+        r = Registry()
+        r.disconnect(sqlite3, ":memory:")
+
+    def test_time_query(self):
+        session = Registry().connect(sqlite3, ":memory:").session
+        agent = session.query(Component).one()
+        state = session.query(MembershipState).first()
+        reg = Registration(
+            uuid=uuid.uuid4().hex,
+            model=cloudhands.common.__version__)
+        start = now = datetime.datetime.now()
+        then = start + datetime.timedelta(minutes=90)
+        end = start + datetime.timedelta(hours=24)
+        act = Touch(artifact=reg, actor=agent, state=state, at=now)
+        limit = TimeInterval(end=then, touch=act) 
+        session.add(limit)
+        session.commit()
+        self.assertEqual(session.query(TimeInterval).filter(
+            TimeInterval.end > now).count(), 1)
+
+        self.assertIs(reg,
+            session.query(Registration).join(Touch).join(TimeInterval).filter(
+                TimeInterval.end.between(start, end)).first())
+        
+    
 if __name__ == "__main__":
     unittest.main()

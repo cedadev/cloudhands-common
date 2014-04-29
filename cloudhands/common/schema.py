@@ -335,6 +335,16 @@ class SoftwareDefinedNetwork(Resource):
     __mapper_args__ = {"polymorphic_identity": "softwaredefinednetwork"}
 
 
+class TimeInterval(Resource):
+    __tablename__ = "timeintervals"
+
+    id = Column("id", Integer, ForeignKey("resources.id"),
+                nullable=False, primary_key=True)
+    end = Column("end", DateTime(), nullable=False)
+
+    __mapper_args__ = {"polymorphic_identity": "timeinterval"}
+
+
 class IPAddress(Resource):
     """
     An Internet address. The address is stored as a string; no interpretation
