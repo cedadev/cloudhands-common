@@ -9,17 +9,20 @@ HostState = fsm_factory(
 MembershipState = fsm_factory(
     "membership", ["invite", "active", "expired", "withdrawn"])
 
-RegistrationState = fsm_factory(
-    "registration", ["modified", "preconfirm", "postconfirm", "valid", "expired", "withdrawn"])
+#RegistrationState = fsm_factory(
+#    "registration", ["modified", "preconfirm", "postconfirm", "valid", "expired", "withdrawn"])
 
-RegistrationState_ = fsm_factory(
-    "registration_*******", [
+RegistrationState = fsm_factory(
+    "registration", [
         "pre_registration_person",
         "pre_registration_inetorgperson",
         "pre_registration_inetorgperson_sn",
         "pre_user_inetorgperson_dn",
         "pre_user_posixaccount",
         "pre_user_ldappublickey",
+        "valid",
+        "expired",
+        "withdrawn",
 ])
 
 SubscriptionState = fsm_factory(

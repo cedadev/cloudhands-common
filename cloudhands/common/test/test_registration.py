@@ -46,7 +46,7 @@ class RegistrationTests(unittest.TestCase):
             model=cloudhands.common.__version__)
 
         preconfirm = session.query(RegistrationState).filter(
-            RegistrationState.name == "preconfirm").one()
+            RegistrationState.name == "pre_registration_inetorgperson").one()
         reg.changes.append(
             Touch(artifact=reg, actor=user, state=preconfirm, at=then))
         session.add(reg)
