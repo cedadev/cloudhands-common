@@ -14,7 +14,7 @@ RegistrationState = fsm_factory(
     "registration", [
         "pre_registration_person",
         "pre_registration_inetorgperson",
-        "pre_registration_inetorgperson_sn",
+        "pre_registration_inetorgperson_cn",
         "pre_user_inetorgperson_dn",
         "pre_user_posixaccount",
         "pre_user_ldappublickey",

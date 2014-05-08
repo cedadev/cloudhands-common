@@ -376,17 +376,30 @@ class Node(Resource):
 
 class PosixUId(Resource):
     """
-    The POSIX identity of a user at a particular provider.
+    The POSIX user name of a user at a particular provider.
     """
     __tablename__ = "posixuids"
 
     id = Column("id", Integer, ForeignKey("resources.id"),
                 nullable=False, primary_key=True)
-    value = Column("value", Integer, nullable=False)
-    name = Column("name", String(length=64), nullable=True)
+    value = Column("value", String(length=64), nullable=False)
     _provider_value_uniq = UniqueConstraint("provider", "value")
 
     __mapper_args__ = {"polymorphic_identity": "posixuid"}
+
+
+class PosixUIdNumber(Resource):
+    """
+    The POSIX user id number at a particular provider.
+    """
+    __tablename__ = "posixuidnumbers"
+
+    id = Column("id", Integer, ForeignKey("resources.id"),
+                nullable=False, primary_key=True)
+    value = Column("value", Integer, nullable=False)
+    _provider_value_uniq = UniqueConstraint("provider", "value")
+
+    __mapper_args__ = {"polymorphic_identity": "posixuidnumber"}
 
 
 class PosixGId(Resource):
