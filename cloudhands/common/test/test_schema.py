@@ -4,6 +4,7 @@
 import datetime
 import operator
 import sqlite3
+import textwrap
 import unittest
 import uuid
 
@@ -19,6 +20,7 @@ from cloudhands.common.fsm import RegistrationState
 import cloudhands.common.schema
 from cloudhands.common.schema import Archive
 from cloudhands.common.schema import Component
+from cloudhands.common.schema import CatalogueItem
 from cloudhands.common.schema import Directory
 from cloudhands.common.schema import Host
 from cloudhands.common.schema import IPAddress
@@ -442,6 +444,99 @@ class TestOrganisationsAndProviders(unittest.TestCase):
 
         self.assertEqual(0, session.query(Organisation).count())
         self.assertEqual(0, session.query(Subscription).count())
+
+
+class TestCatalogueItem(unittest.TestCase):
+
+    def setUp(self):
+        session = Registry().connect(sqlite3, ":memory:").session
+        session.add(Provider(
+            name="testcloud.io", uuid=uuid.uuid4().hex))
+        session.commit()
+
+    def tearDown(self):
+        """ Every test gets its own in-memory database """
+        r = Registry()
+        r.disconnect(sqlite3, ":memory:")
+
+    def test_typical_field_text(self):
+        ci = CatalogueItem(
+            name="NFS Client",
+            description="Headless VM for file transfer operations",
+            note=textwrap.dedent("""
+                <p>This VM runs CentOS 6.5 with a minimal amount of RAM and
+                no X server. It is used for file transfer operations from the
+                command line.</p>
+                """),
+            logo="headless",
+        )
+
+    def test_provider_join(self):
+        session = Registry().connect(sqlite3, ":memory:").session
+        p = session.query(Provider).one()
+        ci = CatalogueItem(
+            name="Web Server",
+            description="Headless VM with Web server",
+            note=textwrap.dedent("""
+                <p>This VM runs Apache on CentOS 6.5.
+                It has 8GB RAM and 4 CPU cores.
+                It is used for hosting websites and applications with a
+                Web API.</p>
+                """),
+            logo="headless",
+            provider=p,
+        )
+        session.add(ci)
+        session.commit()
+        self.assertEqual(1, session.query(CatalogueItem).join(Provider).filter(
+            Provider.uuid == p.uuid).count())
+
+    def test_name_unique_to_provider(self):
+        session = Registry().connect(sqlite3, ":memory:").session
+        session.add(Provider(
+            name="burstcloud.com", uuid=uuid.uuid4().hex))
+        session.commit()
+        providers = session.query(Provider).all()
+
+        session.add_all((
+            CatalogueItem(
+                name="Blog Server",
+                description="WordPress server VM",
+                note=None,
+                logo=None,
+                provider = providers[0],
+            ),
+            CatalogueItem(
+                name="Blog Server",
+                description="Tumblr server VM",
+                note=None,
+                logo=None,
+                provider = providers[1],
+            )
+        ))
+
+        session.commit()
+        self.assertEqual(2, session.query(CatalogueItem).count())
+
+        session.add_all((
+            CatalogueItem(
+                name="Web Server",
+                description="Apache web server VM",
+                note=None,
+                logo=None,
+                provider = providers[0],
+            ),
+            CatalogueItem(
+                name="Web Server",
+                description="Nginx web server VM",
+                note=None,
+                logo=None,
+                provider = providers[0],
+            )
+        ))
+
+        self.assertRaises(
+            sqlalchemy.exc.IntegrityError, session.commit)
 
 
 class TestDirectoryResources(unittest.TestCase):
