@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 # encoding: UTF-8
 
+from collections import OrderedDict
 from collections.abc import MutableMapping
 from collections.abc import MutableSequence
 
@@ -49,6 +50,10 @@ Each entry point declared as a ``jasmin.ssl.bundle`` should be a file
 path.
 """
 
+catalogue = OrderedDict(discover("jasmin.portal.catalogue"))
+"""This is the collection of all cloud catalogue items. Each entry point
+declared under ``jasmin.portal.catalogue` should be a View object.
+"""
 
 if __name__ == "__main__":
     print(*["{:^10} {}".format(k, v) for k, v in globals().items()
