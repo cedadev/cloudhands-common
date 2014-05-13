@@ -491,7 +491,7 @@ class TestCatalogueItem(unittest.TestCase):
         self.assertEqual(1, session.query(CatalogueItem).join(Provider).filter(
             Provider.uuid == p.uuid).count())
 
-    def test_name_unique_to_provider(self):
+    def test_name_unique_across_providers(self):
         session = Registry().connect(sqlite3, ":memory:").session
         session.add(Provider(
             name="burstcloud.com", uuid=uuid.uuid4().hex))
@@ -504,34 +504,37 @@ class TestCatalogueItem(unittest.TestCase):
                 description="WordPress server VM",
                 note=None,
                 logo=None,
-                provider = providers[0],
+                provider=providers[0],
             ),
             CatalogueItem(
                 name="Blog Server",
                 description="Tumblr server VM",
                 note=None,
                 logo=None,
-                provider = providers[1],
+                provider=providers[1],
             )
         ))
 
-        session.commit()
-        self.assertEqual(2, session.query(CatalogueItem).count())
+        self.assertRaises(
+            sqlalchemy.exc.IntegrityError, session.commit)
 
+    def test_name_unique_within_provider(self):
+        session = Registry().connect(sqlite3, ":memory:").session
+        p = session.query(Provider).one()
         session.add_all((
             CatalogueItem(
                 name="Web Server",
                 description="Apache web server VM",
                 note=None,
                 logo=None,
-                provider = providers[0],
+                provider=p,
             ),
             CatalogueItem(
                 name="Web Server",
                 description="Nginx web server VM",
                 note=None,
                 logo=None,
-                provider = providers[0],
+                provider=p,
             )
         ))
 

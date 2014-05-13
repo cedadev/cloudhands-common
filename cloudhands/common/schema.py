@@ -283,21 +283,17 @@ class BcryptedPassword(Resource):
     __mapper_args__ = {"polymorphic_identity": "bcryptedpassword"}
 
 
-"""
 class CatalogueItem(Resource):
-    \"""
+    """
     This table stores the details of an appliance as the user expects it to
     be provisioned.
-    \"""
+    """
     __tablename__ = "catalogueitems"
-
-    __table_args__ = (
-        UniqueConstraint("provider", "name"),)
 
     id = Column("id", Integer, ForeignKey("resources.id"),
                 nullable=False, primary_key=True)
     name = Column(
-        "name", String(length=32), nullable=False)
+        "name", String(length=32), nullable=False, unique=True)
     description = Column(
         "description", String(length=64), nullable=False)
     note = Column(
@@ -305,34 +301,8 @@ class CatalogueItem(Resource):
     logo = Column(
         "logo", String(length=32), nullable=True)
 
-    #_provider_name_uniq = UniqueConstraint("provider", "name")
-    __mapper_args__ = {"polymorphic_identity": "catalogueitem"}
-"""
-
-class CatalogueItem(Resource):
-    """
-    This table stores the details of an appliance as the user expects it to
-    be provisioned.
-    """
-    __table__ = Table(
-        "catalogueitems", Base.metadata,
-        Column("id", Integer, ForeignKey("resources.id"),
-                nullable=False, primary_key=True),
-        Column(
-            "name", String(length=32), nullable=False),
-        Column(
-            "description", String(length=64), nullable=False),
-        Column(
-            "note", String(length=1024), nullable=True),
-        Column(
-            "logo", String(length=32), nullable=True),
-    )
-
     __mapper_args__ = {"polymorphic_identity": "catalogueitem"}
 
-CatalogueItem.__table__.append_constraint(
-    UniqueConstraint(
-        Resource.provider_id, CatalogueItem.__table__._columns._data["name"]))
 
 class Directory(Resource):
     """
@@ -435,7 +405,6 @@ class PosixUId(Resource):
     id = Column("id", Integer, ForeignKey("resources.id"),
                 nullable=False, primary_key=True)
     value = Column("value", String(length=64), nullable=False)
-    _provider_value_uniq = UniqueConstraint("provider", "value")
 
     __mapper_args__ = {"polymorphic_identity": "posixuid"}
 
@@ -449,7 +418,6 @@ class PosixUIdNumber(Resource):
     id = Column("id", Integer, ForeignKey("resources.id"),
                 nullable=False, primary_key=True)
     value = Column("value", Integer, nullable=False)
-    _provider_value_uniq = UniqueConstraint("provider", "value")
 
     __mapper_args__ = {"polymorphic_identity": "posixuidnumber"}
 
@@ -464,7 +432,6 @@ class PosixGId(Resource):
                 nullable=False, primary_key=True)
     value = Column("value", Integer, nullable=False)
     name = Column("name", String(length=64), nullable=True)
-    _provider_value_uniq = UniqueConstraint("provider", "value")
 
     __mapper_args__ = {"polymorphic_identity": "posixgid"}
 
@@ -478,7 +445,6 @@ class PublicKey(Resource):
     id = Column("id", Integer, ForeignKey("resources.id"),
                 nullable=False, primary_key=True)
     value = Column("value", String(length=512), nullable=False)
-    _provider_value_uniq = UniqueConstraint("provider", "value")
 
     __mapper_args__ = {"polymorphic_identity": "publickey"}
 
