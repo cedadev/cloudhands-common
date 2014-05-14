@@ -304,107 +304,43 @@ class TestApplianceAndResources(unittest.TestCase):
         self.assertIn((user, app), jobs)
 
         now = datetime.datetime.utcnow()
-        scheduling = session.query(ApplianceState).filter(
-            ApplianceState.name == "scheduling").one()
-        host.changes.append(
-            Touch(artifact=host, actor=user, state=scheduling, at=now))
+        provisioning = session.query(ApplianceState).filter(
+            ApplianceState.name == "provisioning").one()
+        app.changes.append(
+            Touch(artifact=app, actor=user, state=provisioning, at=now))
         session.commit()
 
         # 5. Burst controller raises a node
         now = datetime.datetime.utcnow()
         provider = session.query(Provider).one()
-        act = Touch(artifact=host, actor=user, state=scheduling, at=now)
-        host.changes.append(act)
-        node = Node(name=host.name, touch=act, provider=provider)
-        session.add(node)
-        session.commit()
+        act = Touch(artifact=app, actor=user, state=provisioning, at=now)
 
-        # 6. Burst controller allocates an IP
-        now = datetime.datetime.utcnow()
-        act = Touch(artifact=host, actor=user, state=scheduling, at=now)
-        host.changes.append(act)
-        ip = IPAddress(value="192.168.1.4", touch=act, provider=provider)
-        session.add(ip)
-        self.assertIn(act, session)
-        session.commit()
-
-        # 7. Burst controller marks Host as unknown
-        now = datetime.datetime.utcnow()
-        unknown = session.query(ApplianceState).filter(
-            ApplianceState.name == "unknown").one()
-        host.changes.append(
-            Touch(artifact=host, actor=user, state=unknown, at=now))
-
-        # 8. Recovering details of provisioning of this host
-        resources = [r for i in session.query(Touch).filter(
-            Touch.artifact == host).all() for r in i.resources]
-        self.assertIn(node, resources)
-        self.assertIn(ip, resources)
-
-    def test_single_host_lifecycle_with_sdn(self):
-        session = Registry().connect(sqlite3, ":memory:").session
-
-        # 0. Set up User
-        user = User(handle="Anon", uuid=uuid.uuid4().hex)
-
-        # 1. User creates a new host
-        now = datetime.datetime.utcnow()
-        org = session.query(Organisation).one()
-        requested = session.query(ApplianceState).filter(
-            ApplianceState.name == "requested").one()
-        host = Host(
-            uuid=uuid.uuid4().hex,
-            model=cloudhands.common.__version__,
-            organisation=org,
-            name="userwantsthishostname"
-            )
-        act = Touch(artifact=host, actor=user, state=requested, at=now)
-        osImg = OSImage(name="CentOS 6.5", touch=act)
-        host.changes.append(act)
-        session.add_all((osImg, host))
-        session.commit()
-
-        # 2. Burst controller finds hosts in 'requested' and provisions them
-        latest = (h.changes[-1] for h in session.query(Host).all())
-        jobs = [(t.actor, t.artifact) for t in latest if t.state is requested]
-        self.assertIn((user, host), jobs)
-
-        now = datetime.datetime.utcnow()
-        scheduling = session.query(ApplianceState).filter(
-            ApplianceState.name == "scheduling").one()
-        act = Touch(artifact=host, actor=user, state=scheduling, at=now)
-        host.changes.append(act)
-        session.commit()
-
-        # 3. Burst controller raises a node
-        now = datetime.datetime.utcnow()
-        provider = session.query(Provider).one()
-        act = Touch(artifact=host, actor=user, state=scheduling, at=now)
-        host.changes.append(act)
-        node = Node(name=host.name, touch=act, provider=provider)
+        label = session.query(Label).join(Touch).join(Appliance).filter(
+            Appliance.id == app.id).first()
+        node = Node(name=label.name, touch=act, provider=provider)
         sdn = SoftwareDefinedNetwork(name="bridge_routed_external", touch=act)
         session.add_all((sdn, node))
         session.commit()
 
-        # 4. Burst controller allocates an IP
+        # 6. Burst controller allocates an IP
         now = datetime.datetime.utcnow()
-        act = Touch(artifact=host, actor=user, state=scheduling, at=now)
-        host.changes.append(act)
+        act = Touch(artifact=app, actor=user, state=provisioning, at=now)
+        app.changes.append(act)
         ip = IPAddress(value="192.168.1.4", touch=act, provider=provider)
         session.add(ip)
         self.assertIn(act, session)
         session.commit()
 
-        # 5. Burst controller marks Host as unknown
+        # 7. Burst controller marks Host as pre_operational
         now = datetime.datetime.utcnow()
-        unknown = session.query(ApplianceState).filter(
-            ApplianceState.name == "unknown").one()
-        host.changes.append(
-            Touch(artifact=host, actor=user, state=unknown, at=now))
+        preoperational = session.query(ApplianceState).filter(
+            ApplianceState.name == "pre_operational").one()
+        app.changes.append(
+            Touch(artifact=app, actor=user, state=preoperational, at=now))
 
-        # 6. Recovering details of provisioning of this host
+        # 8. Recovering details of provisioning of this host
         resources = [r for i in session.query(Touch).filter(
-            Touch.artifact == host).all() for r in i.resources]
+            Touch.artifact == app).all() for r in i.resources]
         self.assertIn(node, resources)
         self.assertIn(sdn, resources)
         self.assertIn(ip, resources)
