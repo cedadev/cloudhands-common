@@ -305,8 +305,7 @@ class BcryptedPassword(Resource):
 
 class CatalogueItem(Resource):
     """
-    This table stores the details of an appliance as the user expects it to
-    be provisioned.
+    This table stores the details of an appliance as advertised to the user.
     """
     __tablename__ = "catalogueitems"
 
@@ -322,6 +321,25 @@ class CatalogueItem(Resource):
         "logo", String(length=32), nullable=True)
 
     __mapper_args__ = {"polymorphic_identity": "catalogueitem"}
+
+
+class CatalogueChoice(Resource):
+    """
+    This table stores the details of an appliance as the user expects it to
+    be provisioned.
+    """
+    __tablename__ = "cataloguechoices"
+
+    id = Column("id", Integer, ForeignKey("resources.id"),
+                nullable=False, primary_key=True)
+    name = Column(
+        "name", String(length=32), nullable=False, unique=True)
+    description = Column(
+        "description", String(length=64), nullable=False)
+    logo = Column(
+        "logo", String(length=32), nullable=True)
+
+    __mapper_args__ = {"polymorphic_identity": "cataloguechoice"}
 
 
 class Label(Resource):

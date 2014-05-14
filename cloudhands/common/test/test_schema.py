@@ -22,10 +22,12 @@ import cloudhands.common.schema
 from cloudhands.common.schema import Appliance
 from cloudhands.common.schema import Archive
 from cloudhands.common.schema import Component
+from cloudhands.common.schema import CatalogueChoice
 from cloudhands.common.schema import CatalogueItem
 from cloudhands.common.schema import Directory
 from cloudhands.common.schema import Host
 from cloudhands.common.schema import IPAddress
+from cloudhands.common.schema import Label
 from cloudhands.common.schema import Membership
 from cloudhands.common.schema import Node
 from cloudhands.common.schema import Organisation
@@ -223,7 +225,7 @@ class TestApplianceAndResources(unittest.TestCase):
         r = Registry()
         r.disconnect(sqlite3, ":memory:")
 
-    def test_single_host_lifecycle(self):
+    def test_single_appliance_lifecycle(self):
         session = Registry().connect(sqlite3, ":memory:").session
 
         # 0. Set up User
@@ -243,18 +245,63 @@ class TestApplianceAndResources(unittest.TestCase):
         act = Touch(artifact=app, actor=user, state=requested, at=now)
 
         tmplt = session.query(CatalogueItem).first()
-        ci = CatalogueItem(
+        choice = CatalogueChoice(
             provider=provider, touch=act,
             **{k: getattr(tmplt, k, None)
-            for k in ("name", "description", "note", "logo")})
-        session.add(ci)
+            for k in ("name", "description", "logo")})
+        session.add(choice)
         session.commit()
-        self.assertEqual(3, session.query(CatalogueItem).count())
 
-        # 2. Burst controller finds hosts in 'requested' and provisions them
-        latest = (h.changes[-1] for h in session.query(Host).all())
-        jobs = [(t.actor, t.artifact) for t in latest if t.state is requested]
-        self.assertIn((user, host), jobs)
+        self.assertEqual(
+            1, session.query(CatalogueChoice).join(Touch).join(Appliance).filter(
+            Appliance.id == app.id).count())
+
+        now = datetime.datetime.utcnow()
+        configuring = session.query(ApplianceState).filter(
+            ApplianceState.name == "configuring").one()
+        act = Touch(artifact=app, actor=user, state=configuring, at=now)
+        session.add(act)
+        session.commit()
+
+        self.assertEqual(
+            2, session.query(Touch).join(Appliance).filter(
+            Appliance.id == app.id).count())
+
+        # 2. Appliance persists and is configured interactively by user
+        latest = app.changes[-1]
+        now = datetime.datetime.utcnow()
+        act = Touch(
+            artifact=app, actor=user, state=latest.state, at=now)
+        label = Label(
+            name="test_server01",
+            description="This is just for kicking tyres",
+            touch=act)
+        session.add(label)
+        session.commit()
+
+        self.assertEqual(
+            3, session.query(Touch).join(Appliance).filter(
+            Appliance.id == app.id).count())
+
+        # 3. When user is happy, clicks 'Go'
+        now = datetime.datetime.utcnow()
+        preprovision = session.query(ApplianceState).filter(
+            ApplianceState.name == "pre_provision").one()
+        act = Touch(
+            artifact=app, actor=user, state=preprovision, at=now)
+        session.add(act)
+        session.commit()
+
+        self.assertEqual(
+            4, session.query(Touch).join(Appliance).filter(
+            Appliance.id == app.id).count())
+
+        # 4. Burst controller finds hosts in 'pre_provision' and actions them
+        latest = (h.changes[-1] for h in session.query(Appliance).all())
+        jobs = [
+            (t.actor, t.artifact) for t in latest
+            if t.state is preprovision]
+        self.assertIn((user, app), jobs)
 
         now = datetime.datetime.utcnow()
         scheduling = session.query(ApplianceState).filter(
@@ -263,7 +310,7 @@ class TestApplianceAndResources(unittest.TestCase):
             Touch(artifact=host, actor=user, state=scheduling, at=now))
         session.commit()
 
-        # 3. Burst controller raises a node
+        # 5. Burst controller raises a node
         now = datetime.datetime.utcnow()
         provider = session.query(Provider).one()
         act = Touch(artifact=host, actor=user, state=scheduling, at=now)
@@ -272,7 +319,7 @@ class TestApplianceAndResources(unittest.TestCase):
         session.add(node)
         session.commit()
 
-        # 4. Burst controller allocates an IP
+        # 6. Burst controller allocates an IP
         now = datetime.datetime.utcnow()
         act = Touch(artifact=host, actor=user, state=scheduling, at=now)
         host.changes.append(act)
@@ -281,14 +328,14 @@ class TestApplianceAndResources(unittest.TestCase):
         self.assertIn(act, session)
         session.commit()
 
-        # 5. Burst controller marks Host as unknown
+        # 7. Burst controller marks Host as unknown
         now = datetime.datetime.utcnow()
         unknown = session.query(ApplianceState).filter(
             ApplianceState.name == "unknown").one()
         host.changes.append(
             Touch(artifact=host, actor=user, state=unknown, at=now))
 
-        # 6. Recovering details of provisioning of this host
+        # 8. Recovering details of provisioning of this host
         resources = [r for i in session.query(Touch).filter(
             Touch.artifact == host).all() for r in i.resources]
         self.assertIn(node, resources)
