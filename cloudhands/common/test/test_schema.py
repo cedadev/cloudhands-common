@@ -19,6 +19,7 @@ from cloudhands.common.fsm import MembershipState
 from cloudhands.common.fsm import RegistrationState
 
 import cloudhands.common.schema
+from cloudhands.common.schema import Appliance
 from cloudhands.common.schema import Archive
 from cloudhands.common.schema import Component
 from cloudhands.common.schema import CatalogueItem
@@ -195,8 +196,26 @@ class TestApplianceAndResources(unittest.TestCase):
         session.add(Organisation(
             uuid=uuid.uuid4().hex,
             name="TestOrg"))
-        session.add(Provider(
-            name="testcloud.io", uuid=uuid.uuid4().hex))
+        p = Provider(
+            name="testcloud.io", uuid=uuid.uuid4().hex)
+        session.add(p)
+
+        session.add_all((
+            CatalogueItem(
+                name="Web Server",
+                description="Apache server VM",
+                note=None,
+                logo=None,
+                provider=p,
+            ),
+            CatalogueItem(
+                name="File Server",
+                description="OpenSSH server VM",
+                note=None,
+                logo=None,
+                provider=p,
+            )
+        ))
         session.commit()
 
     def tearDown(self):
@@ -209,22 +228,28 @@ class TestApplianceAndResources(unittest.TestCase):
 
         # 0. Set up User
         user = User(handle="Anon", uuid=uuid.uuid4().hex)
+        provider = session.query(Provider).one()
 
-        # 1. User creates a new host
+        # 1. User creates a new appliance
         now = datetime.datetime.utcnow()
         org = session.query(Organisation).one()
         requested = session.query(ApplianceState).filter(
             ApplianceState.name == "requested").one()
-        host = Host(
+        app = Appliance(
             uuid=uuid.uuid4().hex,
             model=cloudhands.common.__version__,
             organisation=org,
-            name="userwantsthishostname"
             )
-        host.changes.append(
-            Touch(artifact=host, actor=user, state=requested, at=now))
-        session.add(host)
+        act = Touch(artifact=app, actor=user, state=requested, at=now)
+
+        tmplt = session.query(CatalogueItem).first()
+        ci = CatalogueItem(
+            provider=provider, touch=act,
+            **{k: getattr(tmplt, k, None)
+            for k in ("name", "description", "note", "logo")})
+        session.add(ci)
         session.commit()
+        self.assertEqual(3, session.query(CatalogueItem).count())
 
         # 2. Burst controller finds hosts in 'requested' and provisions them
         latest = (h.changes[-1] for h in session.query(Host).all())
@@ -536,7 +561,6 @@ class TestOrganisationsAndProviders(unittest.TestCase):
         session = Registry().connect(sqlite3, ":memory:").session
         archive = session.query(Archive).filter(
             Archive.name == "NITS").first()
-        self.assertTrue(archive)
         org = session.query(Organisation).one()
         subs = [
             Subscription(

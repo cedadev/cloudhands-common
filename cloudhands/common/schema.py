@@ -58,6 +58,26 @@ class Artifact(Base):
         "polymorphic_on": typ}
 
 
+class Appliance(Artifact):
+    """
+    An Appliance is a computational asset. An appliance is created from an item
+    in a catalogue. It is provisioned on one or more nodes, with a configured
+    network. The correct data sources must be mounted and the right users given
+    access. All this is represented by a Appliance record and its resources.
+    """
+    __tablename__ = "appliances"
+
+    id = Column("id", Integer, ForeignKey("artifacts.id"),
+                nullable=False, primary_key=True)
+    organisation_id = Column(
+        "organisation_id", Integer, ForeignKey("organisations.id"),
+        nullable=False)
+
+    organisation = relationship("Organisation")
+
+    __mapper_args__ = {"polymorphic_identity": "appliance"}
+
+
 class Membership(Artifact):
     """
     No user may interact with the system without specific membership
@@ -302,6 +322,23 @@ class CatalogueItem(Resource):
         "logo", String(length=32), nullable=True)
 
     __mapper_args__ = {"polymorphic_identity": "catalogueitem"}
+
+
+class Label(Resource):
+    """
+    This table stores the details of an appliance as the user wants them
+    be displayed.
+    """
+    __tablename__ = "labels"
+
+    id = Column("id", Integer, ForeignKey("resources.id"),
+                nullable=False, primary_key=True)
+    name = Column(
+        "name", String(length=32), nullable=False, unique=True)
+    description = Column(
+        "description", String(length=64), nullable=False)
+
+    __mapper_args__ = {"polymorphic_identity": "label"}
 
 
 class Directory(Resource):
