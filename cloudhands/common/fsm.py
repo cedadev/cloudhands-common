@@ -3,8 +3,27 @@
 
 from cloudhands.common.schema import fsm_factory
 
+ApplianceState = fsm_factory(
+    "appliance", [
+        "requested",
+        "configuring",
+        "pre_provision",
+        "provisioning",
+        "pre_operational",
+        "operational",
+        "pre_stop",
+        "stopped",
+        "pre_delete",
+        "deleted"])
+
+# TODO: remove
 HostState = fsm_factory(
     "host", ["requested", "scheduling", "unknown", "up", "deleting", "down"])
+
+MonitoredState = fsm_factory(
+    "monitored", [
+        "up",
+        "down"])
 
 MembershipState = fsm_factory(
     "membership", ["invite", "active", "expired", "withdrawn"])
