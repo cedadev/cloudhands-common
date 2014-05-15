@@ -195,10 +195,18 @@ class TestApplianceAndResources(unittest.TestCase):
         session.add_all(
             State(fsm=ApplianceState.table, name=v)
             for v in ApplianceState.values)
-        org = Organisation(
-            uuid=uuid.uuid4().hex,
-            name="TestOrg")
+        session.add_all((
+            Organisation(
+                uuid=uuid.uuid4().hex,
+                name="TestOrg"),
+            Provider(
+                uuid=uuid.uuid4().hex,
+                name="testcloud.io"),
+            )
+        )
+        session.commit()
 
+        org = session.query(Organisation).one()
         session.add_all((
             CatalogueItem(
                 name="Web Server",
@@ -227,11 +235,10 @@ class TestApplianceAndResources(unittest.TestCase):
 
         # 0. Set up User
         user = User(handle="Anon", uuid=uuid.uuid4().hex)
-        provider = session.query(Provider).one()
+        org = session.query(Organisation).one()
 
         # 1. User creates a new appliance
         now = datetime.datetime.utcnow()
-        org = session.query(Organisation).one()
         requested = session.query(ApplianceState).filter(
             ApplianceState.name == "requested").one()
         app = Appliance(
@@ -243,7 +250,7 @@ class TestApplianceAndResources(unittest.TestCase):
 
         tmplt = session.query(CatalogueItem).first()
         choice = CatalogueChoice(
-            provider=provider, touch=act,
+            provider=None, touch=act,
             **{k: getattr(tmplt, k, None)
             for k in ("name", "description", "logo")})
         session.add(choice)
@@ -649,7 +656,7 @@ class TestCatalogueItem(unittest.TestCase):
         session.add(ci)
         session.commit()
         self.assertEqual(1, session.query(CatalogueItem).join(Organisation).filter(
-            Organisation.uuid == organisation.uuid).count())
+            Organisation.uuid == org.uuid).count())
 
     def test_name_unique_across_organisations(self):
         session = Registry().connect(sqlite3, ":memory:").session

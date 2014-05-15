@@ -32,7 +32,7 @@ class Organisation(Base):
     hosts = relationship("Host")
     memberships = relationship("Membership")
     subscriptions = relationship("Subscription", cascade="all, delete")
-    catalogue = relationship("CatalogueItem", cascade="all, delete")
+    catalogue = relationship("CatalogueItem")
 
 
 class CatalogueItem(Base):
@@ -41,12 +41,11 @@ class CatalogueItem(Base):
     """
     __tablename__ = "catalogueitems"
 
-    id = Column("id", Integer, ForeignKey("resources.id"),
-                nullable=False, primary_key=True)
+    name = Column(
+        "name", String(length=32),
+        nullable=False, primary_key=True, unique=True)
     organisation_id = Column(
         "organisation_id", Integer, ForeignKey("organisations.id"))
-    name = Column(
-        "name", String(length=32), nullable=False, unique=True)
     description = Column(
         "description", String(length=64), nullable=False)
     note = Column(
