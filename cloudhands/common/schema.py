@@ -32,6 +32,29 @@ class Organisation(Base):
     hosts = relationship("Host")
     memberships = relationship("Membership")
     subscriptions = relationship("Subscription", cascade="all, delete")
+    catalogue = relationship("CatalogueItem", cascade="all, delete")
+
+
+class CatalogueItem(Base):
+    """
+    This table stores the details of an appliance as advertised to the user.
+    """
+    __tablename__ = "catalogueitems"
+
+    id = Column("id", Integer, ForeignKey("resources.id"),
+                nullable=False, primary_key=True)
+    organisation_id = Column(
+        "organisation_id", Integer, ForeignKey("organisations.id"))
+    name = Column(
+        "name", String(length=32), nullable=False, unique=True)
+    description = Column(
+        "description", String(length=64), nullable=False)
+    note = Column(
+        "note", String(length=1024), nullable=True)
+    logo = Column(
+        "logo", String(length=32), nullable=True)
+    
+    organisation = relationship("Organisation")
 
 
 class Artifact(Base):
@@ -301,26 +324,6 @@ class BcryptedPassword(Resource):
     value = Column("value", String(length=60), nullable=False, unique=True)
 
     __mapper_args__ = {"polymorphic_identity": "bcryptedpassword"}
-
-
-class CatalogueItem(Resource):
-    """
-    This table stores the details of an appliance as advertised to the user.
-    """
-    __tablename__ = "catalogueitems"
-
-    id = Column("id", Integer, ForeignKey("resources.id"),
-                nullable=False, primary_key=True)
-    name = Column(
-        "name", String(length=32), nullable=False, unique=True)
-    description = Column(
-        "description", String(length=64), nullable=False)
-    note = Column(
-        "note", String(length=1024), nullable=True)
-    logo = Column(
-        "logo", String(length=32), nullable=True)
-
-    __mapper_args__ = {"polymorphic_identity": "catalogueitem"}
 
 
 class CatalogueChoice(Resource):

@@ -195,12 +195,9 @@ class TestApplianceAndResources(unittest.TestCase):
         session.add_all(
             State(fsm=ApplianceState.table, name=v)
             for v in ApplianceState.values)
-        session.add(Organisation(
+        org = Organisation(
             uuid=uuid.uuid4().hex,
-            name="TestOrg"))
-        p = Provider(
-            name="testcloud.io", uuid=uuid.uuid4().hex)
-        session.add(p)
+            name="TestOrg")
 
         session.add_all((
             CatalogueItem(
@@ -208,14 +205,14 @@ class TestApplianceAndResources(unittest.TestCase):
                 description="Apache server VM",
                 note=None,
                 logo=None,
-                provider=p,
+                organisation=org,
             ),
             CatalogueItem(
                 name="File Server",
                 description="OpenSSH server VM",
                 note=None,
                 logo=None,
-                provider=p,
+                organisation=org,
             )
         ))
         session.commit()
@@ -612,8 +609,8 @@ class TestCatalogueItem(unittest.TestCase):
 
     def setUp(self):
         session = Registry().connect(sqlite3, ":memory:").session
-        session.add(Provider(
-            name="testcloud.io", uuid=uuid.uuid4().hex))
+        session.add(Organisation(
+            name="MARMITE", uuid=uuid.uuid4().hex))
         session.commit()
 
     def tearDown(self):
@@ -633,9 +630,10 @@ class TestCatalogueItem(unittest.TestCase):
             logo="headless",
         )
 
-    def test_provider_join(self):
+    def test_organisation_join(self):
         session = Registry().connect(sqlite3, ":memory:").session
-        p = session.query(Provider).one()
+        org = session.query(Organisation).one()
+        self.assertEqual(0, session.query(CatalogueItem).count())
         ci = CatalogueItem(
             name="Web Server",
             description="Headless VM with Web server",
@@ -646,19 +644,19 @@ class TestCatalogueItem(unittest.TestCase):
                 Web API.</p>
                 """),
             logo="headless",
-            provider=p,
+            organisation=org
         )
         session.add(ci)
         session.commit()
-        self.assertEqual(1, session.query(CatalogueItem).join(Provider).filter(
-            Provider.uuid == p.uuid).count())
+        self.assertEqual(1, session.query(CatalogueItem).join(Organisation).filter(
+            Organisation.uuid == organisation.uuid).count())
 
-    def test_name_unique_across_providers(self):
+    def test_name_unique_across_organisations(self):
         session = Registry().connect(sqlite3, ":memory:").session
-        session.add(Provider(
-            name="burstcloud.com", uuid=uuid.uuid4().hex))
+        session.add(Organisation(
+            name="BRANSTON", uuid=uuid.uuid4().hex))
         session.commit()
-        providers = session.query(Provider).all()
+        orgs = session.query(Organisation).all()
 
         session.add_all((
             CatalogueItem(
@@ -666,37 +664,37 @@ class TestCatalogueItem(unittest.TestCase):
                 description="WordPress server VM",
                 note=None,
                 logo=None,
-                provider=providers[0],
+                organisation=orgs[0]
             ),
             CatalogueItem(
                 name="Blog Server",
                 description="Tumblr server VM",
                 note=None,
                 logo=None,
-                provider=providers[1],
+                organisation=orgs[1]
             )
         ))
 
         self.assertRaises(
             sqlalchemy.exc.IntegrityError, session.commit)
 
-    def test_name_unique_within_provider(self):
+    def test_name_unique_within_organisation(self):
         session = Registry().connect(sqlite3, ":memory:").session
-        p = session.query(Provider).one()
+        org = session.query(Organisation).one()
         session.add_all((
             CatalogueItem(
                 name="Web Server",
                 description="Apache web server VM",
                 note=None,
                 logo=None,
-                provider=p,
+                organisation=org
             ),
             CatalogueItem(
                 name="Web Server",
                 description="Nginx web server VM",
                 note=None,
                 logo=None,
-                provider=p,
+                organisation=org
             )
         ))
 
