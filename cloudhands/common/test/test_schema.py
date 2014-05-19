@@ -209,6 +209,7 @@ class TestApplianceAndResources(unittest.TestCase):
         org = session.query(Organisation).one()
         session.add_all((
             CatalogueItem(
+                uuid=uuid.uuid4().hex,
                 name="Web Server",
                 description="Apache server VM",
                 note=None,
@@ -216,6 +217,7 @@ class TestApplianceAndResources(unittest.TestCase):
                 organisation=org,
             ),
             CatalogueItem(
+                uuid=uuid.uuid4().hex,
                 name="File Server",
                 description="OpenSSH server VM",
                 note=None,
@@ -642,6 +644,7 @@ class TestCatalogueItem(unittest.TestCase):
         org = session.query(Organisation).one()
         self.assertEqual(0, session.query(CatalogueItem).count())
         ci = CatalogueItem(
+            uuid=uuid.uuid4().hex,
             name="Web Server",
             description="Headless VM with Web server",
             note=textwrap.dedent("""

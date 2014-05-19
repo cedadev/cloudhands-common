@@ -41,6 +41,7 @@ class CatalogueItem(Base):
     """
     __tablename__ = "catalogueitems"
 
+    uuid = Column("uuid", CHAR(length=32), nullable=False)
     name = Column(
         "name", String(length=32),
         nullable=False, primary_key=True, unique=True)
