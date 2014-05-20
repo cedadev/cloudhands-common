@@ -45,6 +45,7 @@ setup(
         "console_scripts": [
         ],
         "jasmin.component.fsm": [
+            "appliance = cloudhands.common.fsm:ApplianceState",
             "host = cloudhands.common.fsm:HostState",
             "membership = cloudhands.common.fsm:MembershipState",
             "registration = cloudhands.common.fsm:RegistrationState",
