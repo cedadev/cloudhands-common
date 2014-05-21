@@ -336,7 +336,7 @@ class CatalogueChoice(Resource):
     id = Column("id", Integer, ForeignKey("resources.id"),
                 nullable=False, primary_key=True)
     name = Column(
-        "name", String(length=32), nullable=False, unique=True)
+        "name", String(length=32), nullable=False, unique=False)
     description = Column(
         "description", String(length=64), nullable=False)
     logo = Column(
