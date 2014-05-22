@@ -355,9 +355,9 @@ class Label(Resource):
     id = Column("id", Integer, ForeignKey("resources.id"),
                 nullable=False, primary_key=True)
     name = Column(
-        "name", String(length=32), nullable=False, unique=True)
+        "name", String(length=32), nullable=False, unique=False)
     description = Column(
-        "description", String(length=64), nullable=False)
+        "description", String(length=64), nullable=True)
 
     __mapper_args__ = {"polymorphic_identity": "label"}
 

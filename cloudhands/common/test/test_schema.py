@@ -70,6 +70,36 @@ class TestSubscriptionState(unittest.TestCase):
             self.fail(e)
 
 
+class TestLabel(unittest.TestCase):
+
+    def setUp(self):
+        """ Populate test database"""
+        session = Registry().connect(sqlite3, ":memory:").session
+
+    def tearDown(self):
+        """ Every test gets its own in-memory database """
+        r = Registry()
+        r.disconnect(sqlite3, ":memory:")
+
+    def test_names_are_not_unique(self):
+        session = Registry().connect(sqlite3, ":memory:").session
+        session.add_all((
+            Label(name="Test", description="Test description"),
+            Label(name="Test", description="Test description"),
+        ))
+        session.commit()
+        self.assertEqual(2, session.query(Label).count())
+    
+    def test_descriptions_may_be_omitted(self):
+        session = Registry().connect(sqlite3, ":memory:").session
+        session.add_all((
+            Label(name="One"),
+            Label(name="Two"),
+        ))
+        session.commit()
+        self.assertEqual(2, session.query(Label).count())
+
+        
 class TestMembership(unittest.TestCase):
 
     def setUp(self):
