@@ -29,7 +29,7 @@ class Organisation(Base):
     uuid = Column("uuid", CHAR(length=32), nullable=False)
     name = Column("name", String(length=64), nullable=False, unique=True)
 
-    hosts = relationship("Host")
+    appliances = relationship("Appliance")
     memberships = relationship("Membership")
     subscriptions = relationship("Subscription", cascade="all, delete")
     catalogue = relationship("CatalogueItem")
