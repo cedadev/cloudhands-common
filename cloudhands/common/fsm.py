@@ -11,6 +11,8 @@ ApplianceState = fsm_factory(
         "provisioning",
         "pre_operational",
         "operational",
+        "pre_check",
+        "pre_start",
         "pre_stop",
         "stopped",
         "pre_delete",
