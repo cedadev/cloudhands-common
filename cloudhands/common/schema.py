@@ -405,6 +405,18 @@ class OSImage(Resource):
     __mapper_args__ = {"polymorphic_identity": "osimage"}
 
 
+class ProviderReport(Resource):
+    __tablename__ = "providerreports"
+
+    id = Column("id", Integer, ForeignKey("resources.id"),
+                nullable=False, primary_key=True)
+    creation = Column("creation", String(length=32), nullable=True, unique=False)
+    power = Column("power", String(length=32), nullable=True, unique=False)
+    health = Column("health", String(length=32), nullable=True, unique=False)
+
+    __mapper_args__ = {"polymorphic_identity": "providerreport"}
+
+
 class SoftwareDefinedNetwork(Resource):
     __tablename__ = "softwaredefinednetworks"
 
