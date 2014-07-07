@@ -2,6 +2,7 @@
 #   encoding: UTF-8
 
 import datetime
+import ipaddress
 import operator
 import sqlite3
 import textwrap
@@ -17,6 +18,7 @@ from cloudhands.common.fsm import ApplianceState
 from cloudhands.common.fsm import HostState
 from cloudhands.common.fsm import MembershipState
 from cloudhands.common.fsm import RegistrationState
+from cloudhands.common.fsm import SubscriptionState
 
 import cloudhands.common.schema
 from cloudhands.common.schema import Appliance
@@ -222,9 +224,7 @@ class TestApplianceAndResources(unittest.TestCase):
     def setUp(self):
         """ Populate test database"""
         session = Registry().connect(sqlite3, ":memory:").session
-        session.add_all(
-            State(fsm=ApplianceState.table, name=v)
-            for v in ApplianceState.values)
+        initialise(session)
         session.add_all((
             Organisation(
                 uuid=uuid.uuid4().hex,
@@ -237,6 +237,28 @@ class TestApplianceAndResources(unittest.TestCase):
         session.commit()
 
         org = session.query(Organisation).one()
+        provider = session.query(Provider).one()
+        actor = session.query(Component).filter(
+            Component.handle == "burst.controller").one()
+        active = session.query(SubscriptionState).filter(
+            SubscriptionState.name == "active").one()
+        subs = Subscription(
+            uuid=uuid.uuid4().hex,
+            model=cloudhands.common.__version__,
+            organisation=org, provider=provider)
+        session.add(subs)
+        session.commit()
+
+        now = datetime.datetime.utcnow()
+        act = Touch(artifact=subs, actor=actor, state=active, at=now)
+        net = ipaddress.ip_network("172.16.144.0/29")
+        session.add_all(
+            (IPAddress(value=str(ip), provider=provider, touch=act)
+            for ip in net.hosts()))
+        session.commit()
+
+        self.assertEqual(6, session.query(IPAddress).count())
+
         session.add_all((
             CatalogueItem(
                 uuid=uuid.uuid4().hex,
@@ -282,7 +304,7 @@ class TestApplianceAndResources(unittest.TestCase):
 
         tmplt = session.query(CatalogueItem).first()
         choice = CatalogueChoice(
-            provider=None, touch=act,
+            provider=None, touch=act, natrouted=True,
             **{k: getattr(tmplt, k, None)
             for k in ("name", "description", "logo")})
         session.add(choice)

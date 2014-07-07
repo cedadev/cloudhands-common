@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 #   encoding: UTF-8
 
+from sqlalchemy import Boolean
 from sqlalchemy import Column
 from sqlalchemy import DateTime
 from sqlalchemy import ForeignKey
@@ -341,6 +342,7 @@ class CatalogueChoice(Resource):
         "description", String(length=64), nullable=False)
     logo = Column(
         "logo", String(length=32), nullable=True)
+    natrouted = Column("natrouted", Boolean, nullable=False)
 
     __mapper_args__ = {"polymorphic_identity": "cataloguechoice"}
 
