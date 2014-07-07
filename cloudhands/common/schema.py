@@ -453,6 +453,20 @@ class IPAddress(Resource):
     __mapper_args__ = {"polymorphic_identity": "ipaddress"}
 
 
+class NATRouting(Resource):
+    """
+    Network Address Translation of non-routable IP address.
+    """
+    __tablename__ = "natroutings"
+
+    id = Column("id", Integer, ForeignKey("resources.id"),
+                nullable=False, primary_key=True)
+    ip_int = Column("ip_int", String(length=64), nullable=False, unique=False)
+    ip_ext = Column("ip_ext", String(length=64), nullable=False, unique=True)
+
+    __mapper_args__ = {"polymorphic_identity": "natrouting"}
+
+
 class Node(Resource):
     """
     Represents a physical server, an instance of a virtual machine (VM),
