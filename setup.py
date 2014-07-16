@@ -25,7 +25,7 @@ setup(
     description="Common definitions for cloudhands PaaS",
     author="D Haynes",
     author_email="david.e.haynes@stfc.ac.uk",
-    url="http://pypi.python.org/pypi/cloudhands-common",
+    url="https://github.com/cedadev/cloudhands-common.git",
     long_description=__doc__,
     classifiers=[
         "Operating System :: OS Independent",
