@@ -14,14 +14,48 @@ __doc__ = """
 Spike for message passing over asyncio-wrapped named pipes.
 """
 
-@asyncio.coroutine
-def wait_until_open_for_write(future, path):
-    future.set_result(open(path, 'w'))
-    return future
+# prototyping
+import unittest
 
-def pipe_open_for_write(future):
-    print("Yay! ", future.result())
-    
+class PipeQueueTest(unittest.TestCase):
+
+    def test_attributes(self):
+        with PipeQueue("test.fifo") as pq:
+            self.assertTrue(hasattr(pq, "node"))
+
+class PipeQueue:
+
+    def __init__(self, path=None):
+        self.path = path
+        self.fd = None
+
+    def __enter__(self):
+        try:
+            os.mkfifo(self.path)
+        except FileExistsError:
+            pass
+
+        loop = asyncio.get_event_loop()
+        future = asyncio.Future()
+        future.add_done_callback(self.pipe_open_for_write)
+
+        self.fd = os.open(self.path, os.O_RDONLY | os.O_NONBLOCK)
+        loop.run_until_complete(
+            self.wait_until_open_for_write(future, self.path))
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        os.close(self.fd)
+        os.remove(self.path)
+        return False
+
+    @asyncio.coroutine
+    def wait_until_open_for_write(self, future, path):
+        future.set_result(open(path, 'w'))
+        return future
+
+    def pipe_open_for_write(self, future):
+        print("Yay! ", future.result())
+        
 def main(args):
     path, = args.path
     try:
@@ -70,4 +104,5 @@ def run():
 
 
 if __name__ == "__main__":
+    unittest.main()
     sys.exit(run())
