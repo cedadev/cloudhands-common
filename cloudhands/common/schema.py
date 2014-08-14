@@ -419,6 +419,17 @@ class ProviderReport(Resource):
     __mapper_args__ = {"polymorphic_identity": "providerreport"}
 
 
+class ProviderToken(Resource):
+    __tablename__ = "providertokens"
+
+    id = Column("id", Integer, ForeignKey("resources.id"),
+                nullable=False, primary_key=True)
+    key = Column("key", String(length=32), nullable=True, unique=False)
+    value = Column("value", String(length=128), nullable=False, unique=False)
+
+    __mapper_args__ = {"polymorphic_identity": "providertoken"}
+
+
 class SoftwareDefinedNetwork(Resource):
     __tablename__ = "softwaredefinednetworks"
 
