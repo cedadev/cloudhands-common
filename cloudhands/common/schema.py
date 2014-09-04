@@ -211,6 +211,7 @@ class User(Actor):
 
     id = Column("id", Integer, ForeignKey("actors.id"),
                 nullable=False, primary_key=True)
+    surname = Column("surname", String(length=32), nullable=True, unique=False)
 
     __mapper_args__ = {"polymorphic_identity": "user"}
 
