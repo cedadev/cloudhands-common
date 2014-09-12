@@ -3,12 +3,12 @@
 
 import unittest
 
-import cloudhands.common.fsm
+import cloudhands.common.states
 from cloudhands.common.discovery import fsms
 
 
 class DiscoveryTest(unittest.TestCase):
 
     def test_state_machines(self):
-        self.assertIn(cloudhands.common.fsm.SubscriptionState, fsms)
-        self.assertIn(cloudhands.common.fsm.HostState, fsms)
+        self.assertIn(cloudhands.common.states.SubscriptionState, fsms)
+        self.assertIn(cloudhands.common.states.HostState, fsms)

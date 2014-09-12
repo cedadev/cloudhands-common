@@ -14,12 +14,6 @@ import sqlalchemy.exc
 from cloudhands.common.connectors import initialise
 from cloudhands.common.connectors import Registry
 
-from cloudhands.common.fsm import ApplianceState
-from cloudhands.common.fsm import HostState
-from cloudhands.common.fsm import MembershipState
-from cloudhands.common.fsm import RegistrationState
-from cloudhands.common.fsm import SubscriptionState
-
 import cloudhands.common.schema
 from cloudhands.common.schema import Appliance
 from cloudhands.common.schema import Archive
@@ -43,6 +37,12 @@ from cloudhands.common.schema import Subscription
 from cloudhands.common.schema import TimeInterval
 from cloudhands.common.schema import Touch
 from cloudhands.common.schema import User
+
+from cloudhands.common.states import ApplianceState
+from cloudhands.common.states import HostState
+from cloudhands.common.states import MembershipState
+from cloudhands.common.states import RegistrationState
+from cloudhands.common.states import SubscriptionState
 
 
 class TestSubscriptionState(unittest.TestCase):

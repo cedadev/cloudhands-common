@@ -11,8 +11,8 @@ import sqlalchemy
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import StaticPool
 
-from cloudhands.common.component import burstCtrl  # TODO: Entry point
-from cloudhands.common.component import identityCtrl  # TODO: Entry point
+from cloudhands.common.components import burstCtrl  # TODO: Entry point
+from cloudhands.common.components import identityCtrl  # TODO: Entry point
 from cloudhands.common.discovery import fsms
 
 from cloudhands.common.schema import metadata

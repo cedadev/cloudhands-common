@@ -45,11 +45,11 @@ setup(
         "console_scripts": [
         ],
         "jasmin.component.fsm": [
-            "appliance = cloudhands.common.fsm:ApplianceState",
-            "host = cloudhands.common.fsm:HostState",
-            "membership = cloudhands.common.fsm:MembershipState",
-            "registration = cloudhands.common.fsm:RegistrationState",
-            "subscription = cloudhands.common.fsm:SubscriptionState",
+            "appliance = cloudhands.common.states:ApplianceState",
+            "host = cloudhands.common.states:HostState",
+            "membership = cloudhands.common.states:MembershipState",
+            "registration = cloudhands.common.states:RegistrationState",
+            "subscription = cloudhands.common.states:SubscriptionState",
         ],
     },
     zip_safe=False
