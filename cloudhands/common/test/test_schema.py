@@ -176,7 +176,7 @@ class TestMembershipFSM(unittest.TestCase):
             organisation=org,
             role="user")
         invite = session.query(MembershipState).filter(
-            MembershipState.name == "invite").one()
+            MembershipState.name == "created").one()
         mship.changes.append(
             Touch(artifact=mship, actor=user, state=invite, at=then))
         session.add(mship)
@@ -805,7 +805,7 @@ class TestDirectoryResources(unittest.TestCase):
             role="user")
         now = datetime.datetime.utcnow()
         invite = session.query(MembershipState).filter(
-            MembershipState.name == "invite").one()
+            MembershipState.name == "created").one()
         mship.changes.append(
             Touch(artifact=mship, actor=user, state=invite, at=now))
         session.add(mship)

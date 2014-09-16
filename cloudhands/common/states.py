@@ -29,7 +29,13 @@ MonitoredState = fsm_factory(
         "down"])
 
 MembershipState = fsm_factory(
-    "membership", ["invite", "active", "expired", "withdrawn"])
+    "membership", [
+        "created",
+        "invited",
+        "active",
+        "expired",
+        "withdrawn"
+    ])
 
 
 RegistrationState = fsm_factory(
