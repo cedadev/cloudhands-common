@@ -32,6 +32,7 @@ MembershipState = fsm_factory(
     "membership", [
         "created",
         "invited",
+        "accepted",
         "active",
         "expired",
         "withdrawn"
