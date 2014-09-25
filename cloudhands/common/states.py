@@ -47,6 +47,7 @@ RegistrationState = fsm_factory(
         "pre_user_posixaccount",
         "pre_user_ldappublickey",
         "valid",
+        "active",
         "expired",
         "withdrawn",
 ])
