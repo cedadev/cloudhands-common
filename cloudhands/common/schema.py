@@ -108,6 +108,9 @@ class Membership(Artifact):
     privileges. The user accumulates credentials against a
     membership record. The membership defines the role a user may operate
     within an `organisation`.
+    The registration is the artifact created during the onboarding of a
+    new user. It collects the resources necessary to authenticate the
+    user (:py:class:`~cloudhands.common.schema.EmailAddress`, 
     """
     __tablename__ = "memberships"
 
@@ -147,9 +150,14 @@ class Host(Artifact):
 
 class Registration(Artifact):
     """
-    No user may interact with the system without having registered.
-    The registration is the artifact in use during the onboarding of a
-    new user.
+    The registration is the artifact created during the onboarding of a
+    new user. It collects the resources necessary to authenticate the
+    user (:py:class:`~cloudhands.common.schema.EmailAddress`, 
+    :py:class:`~cloudhands.common.schema.BcryptedPassword`) and to record
+    his identity in a multi-user system
+    (:py:class:`~cloudhands.common.schema.PublicKey`,
+    :py:class:`~cloudhands.common.schema.PosixUId`,
+    :py:class:`~cloudhands.common.schema.PosixUIdNumber`).
     """
     __tablename__ = "registrations"
 
@@ -161,7 +169,7 @@ class Registration(Artifact):
 
 class Subscription(Artifact):
     """
-    Represents the relationship between an organisation and a provider
+    Represents the relationship between an organisation and a provider.
     """
     __tablename__ = "subscriptions"
 
