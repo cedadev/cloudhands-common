@@ -87,7 +87,18 @@ class Appliance(Artifact):
     An Appliance is a computational asset. An appliance is created from an item
     in a catalogue. It is provisioned on one or more nodes, with a configured
     network. The correct data sources must be mounted and the right users given
-    access. All this is represented by a Appliance record and its resources.
+    access.
+
+    The Appliance record carries links to the
+    :py:class:`~cloudhands.common.schema.CatalogueChoice` made by the user and
+    the :py:class:`~cloudhands.common.schema.Label` information it was given.
+
+    Once activated, other allocated resources are stored against this artifact,
+    such as :py:class:`~cloudhands.common.schema.Node` and
+    :py:class:`~cloudhands.common.schema.IPAddress`.
+
+    Periodically a :py:class:`~cloudhands.common.schema.ProviderReport` is
+    stored against the appliance to confirm its status.
     """
     __tablename__ = "appliances"
 
@@ -108,9 +119,9 @@ class Membership(Artifact):
     privileges. The user accumulates credentials against a
     membership record. The membership defines the role a user may operate
     within an `organisation`.
-    The registration is the artifact created during the onboarding of a
-    new user. It collects the resources necessary to authenticate the
-    user (:py:class:`~cloudhands.common.schema.EmailAddress`, 
+    The membership may be revoked by an administrator, or by the system
+    automatically if there is no activity within a particular
+    :py:class:`~cloudhands.common.schema.TimeInterval`.
     """
     __tablename__ = "memberships"
 
@@ -170,6 +181,8 @@ class Registration(Artifact):
 class Subscription(Artifact):
     """
     Represents the relationship between an organisation and a provider.
+    This artifact records allocated provider resources like
+    :py:class:`~cloudhands.common.schema.IPAddress`.
     """
     __tablename__ = "subscriptions"
 
