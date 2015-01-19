@@ -54,6 +54,7 @@ class CatalogueItem(Base):
         "note", String(length=1024), nullable=True)
     logo = Column(
         "logo", String(length=32), nullable=True)
+    natrouted = Column("natrouted", Boolean, nullable=False)
     
     organisation = relationship("Organisation")
 
