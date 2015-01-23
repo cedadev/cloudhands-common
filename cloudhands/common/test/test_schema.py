@@ -266,6 +266,7 @@ class TestApplianceAndResources(unittest.TestCase):
                 description="Apache server VM",
                 note=None,
                 logo=None,
+                natrouted=True,
                 organisation=org,
             ),
             CatalogueItem(
@@ -274,6 +275,7 @@ class TestApplianceAndResources(unittest.TestCase):
                 description="OpenSSH server VM",
                 note=None,
                 logo=None,
+                natrouted=False,
                 organisation=org,
             )
         ))
@@ -706,6 +708,7 @@ class TestCatalogueItem(unittest.TestCase):
                 Web API.</p>
                 """),
             logo="headless",
+            natrouted=True,
             organisation=org
         )
         session.add(ci)
