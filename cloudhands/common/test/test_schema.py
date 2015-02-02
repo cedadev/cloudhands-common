@@ -39,6 +39,7 @@ from cloudhands.common.schema import Touch
 from cloudhands.common.schema import User
 
 from cloudhands.common.states import ApplianceState
+from cloudhands.common.states import AccessState
 from cloudhands.common.states import HostState
 from cloudhands.common.states import MembershipState
 from cloudhands.common.states import RegistrationState
@@ -404,6 +405,62 @@ class TestApplianceAndResources(unittest.TestCase):
         self.assertIn(node, resources)
         self.assertIn(sdn, resources)
         self.assertIn(ip, resources)
+
+
+class TestAccessAndGroups(unittest.TestCase):
+
+    def setUp(self):
+        """ Populate test database"""
+        session = Registry().connect(sqlite3, ":memory:").session
+        session.add_all(
+            State(fsm=AccessState.table, name=v)
+            for v in AccessState.values)
+        session.add(
+            Group(uuid=uuid.uuid4().hex, name="TestGroup", number=7654321))
+        session.commit()
+
+    def tearDown(self):
+        """ Every test gets its own in-memory database """
+        r = Registry()
+        r.disconnect(sqlite3, ":memory:")
+
+    def test_group_is_parent_of_access(self):
+        session = Registry().connect(sqlite3, ":memory:").session
+        session.flush()
+        grp = session.query(Group).one()
+        user = User(handle=None, uuid=uuid.uuid4().hex)
+        session.add(user)
+        session.commit()
+
+        access = Access(
+            uuid=uuid.uuid4().hex,
+            model=cloudhands.common.__version__,
+            group=grp,
+            role="user")
+        now = datetime.datetime.utcnow()
+        created = session.query(AccessState).filter(
+            AccessState.name == "created").one()
+        act = Touch(artifact=access, actor=user, state=created, at=now)
+        session.add(act)
+        session.commit()
+
+        # illustrates user onboarding - access gets decorated with
+        # posix resource(s)
+        latest = access.changes[-1]
+        now = datetime.datetime.utcnow()
+        gid = PosixGIdNumber(value=grp.number)
+        act = Touch(
+            artifact=access, actor=user, state=latest.state, at=now)
+        gid.touch = act
+        session.add(guid)
+        session.commit()
+    
+        # Check we can get at the resource from the access
+        self.assertIs(
+            gid,
+            session.query(Resource).join(Touch).join(Access).filter(
+                Access.id == access.id).one())
+
 
 
 class TestHostsAndResources(unittest.TestCase):
