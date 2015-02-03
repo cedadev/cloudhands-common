@@ -15,12 +15,14 @@ from cloudhands.common.connectors import initialise
 from cloudhands.common.connectors import Registry
 
 import cloudhands.common.schema
+from cloudhands.common.schema import Access
 from cloudhands.common.schema import Appliance
 from cloudhands.common.schema import Archive
 from cloudhands.common.schema import Component
 from cloudhands.common.schema import CatalogueChoice
 from cloudhands.common.schema import CatalogueItem
 from cloudhands.common.schema import Directory
+from cloudhands.common.schema import Group
 from cloudhands.common.schema import Host
 from cloudhands.common.schema import IPAddress
 from cloudhands.common.schema import Label
@@ -28,6 +30,7 @@ from cloudhands.common.schema import Membership
 from cloudhands.common.schema import Node
 from cloudhands.common.schema import Organisation
 from cloudhands.common.schema import OSImage
+from cloudhands.common.schema import PosixGId
 from cloudhands.common.schema import Provider
 from cloudhands.common.schema import Registration
 from cloudhands.common.schema import Resource
@@ -448,11 +451,11 @@ class TestAccessAndGroups(unittest.TestCase):
         # posix resource(s)
         latest = access.changes[-1]
         now = datetime.datetime.utcnow()
-        gid = PosixGIdNumber(value=grp.number)
+        gid = PosixGId(value=grp.number)
         act = Touch(
             artifact=access, actor=user, state=latest.state, at=now)
         gid.touch = act
-        session.add(guid)
+        session.add(gid)
         session.commit()
     
         # Check we can get at the resource from the access

@@ -23,6 +23,17 @@ The schema module defines tables in the common database
 """
 
 
+class Group(Base):
+    __tablename__ = "groups"
+
+    id = Column("id", Integer, nullable=False, primary_key=True)
+    uuid = Column("uuid", CHAR(length=32), nullable=False)
+    name = Column("name", String(length=32), nullable=False, unique=True)
+    number = Column("number", Integer, nullable=False, unique=True)
+
+    accesses = relationship("Access")
+
+
 class Organisation(Base):
     __tablename__ = "organisations"
 
@@ -81,6 +92,22 @@ class Artifact(Base):
     __mapper_args__ = {
         "polymorphic_identity": "artifact",
         "polymorphic_on": typ}
+
+
+class Access(Artifact):
+    """
+    """
+    __tablename__ = "accesses"
+
+    id = Column("id", Integer, ForeignKey("artifacts.id"),
+                nullable=False, primary_key=True)
+    group_id = Column("group_id", Integer, ForeignKey("groups.id"),
+        nullable=False)
+    role = Column("role", String(length=32), nullable=False)
+
+    group = relationship("Group")
+
+    __mapper_args__ = {"polymorphic_identity": "access"}
 
 
 class Appliance(Artifact):
@@ -551,7 +578,7 @@ class PosixGId(Resource):
     id = Column("id", Integer, ForeignKey("resources.id"),
                 nullable=False, primary_key=True)
     value = Column("value", Integer, nullable=False)
-    name = Column("name", String(length=64), nullable=True)
+    name = Column("name", String(length=32), nullable=True)
 
     __mapper_args__ = {"polymorphic_identity": "posixgid"}
 
