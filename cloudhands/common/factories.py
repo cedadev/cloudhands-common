@@ -6,6 +6,7 @@ import uuid
 
 from cloudhands.common.schema import Component
 from cloudhands.common.schema import EmailAddress
+from cloudhands.common.schema import Group
 from cloudhands.common.schema import Registration
 from cloudhands.common.schema import Touch
 from cloudhands.common.schema import User
@@ -22,6 +23,18 @@ def component(session, handle):
         session.flush()
     finally:
         return session.query(Component).filter(Component.handle == handle).first()
+
+
+def group(session, name, number):
+    grp = Group(name=name, number=number, uuid=uuid.uuid4().hex)
+    try:
+        session.add(grp)
+        session.commit()
+    except Exception:
+        session.rollback()
+        session.flush()
+    finally:
+        return session.query(Group).filter(Group.number == number).first()
 
 
 def user(session, handle, surname=None):
