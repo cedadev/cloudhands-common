@@ -24,6 +24,7 @@ from cloudhands.common.schema import Directory
 from cloudhands.common.schema import Host
 from cloudhands.common.schema import IPAddress
 from cloudhands.common.schema import Label
+from cloudhands.common.schema import LDAPAttribute
 from cloudhands.common.schema import Membership
 from cloudhands.common.schema import Node
 from cloudhands.common.schema import Organisation
@@ -834,6 +835,64 @@ class TestDirectoryResources(unittest.TestCase):
         self.assertIs(
             d,
             session.query(Resource).join(Touch).join(Membership).filter(
+                Membership.id == mship.id).one())
+
+
+class TestLDAPResources(unittest.TestCase):
+
+    def setUp(self):
+        """ Populate test database"""
+        session = Registry().connect(sqlite3, ":memory:").session
+        session.add_all(
+            State(fsm=MembershipState.table, name=v)
+            for v in MembershipState.values)
+        session.add(Organisation(
+            uuid=uuid.uuid4().hex,
+            name="TestOrg"))
+        session.add(User(handle="newuser", uuid=uuid.uuid4().hex))
+        session.commit()
+
+    def tearDown(self):
+        """ Every test gets its own in-memory database """
+        r = Registry()
+        r.disconnect(sqlite3, ":memory:")
+
+    def test_ldapattribute_attaches_to_membership(self):
+        session = Registry().connect(sqlite3, ":memory:").session
+        session.flush()
+        user = session.query(User).one()
+        org = session.query(Organisation).one()
+        mship = Membership(
+            uuid=uuid.uuid4().hex,
+            model=cloudhands.common.__version__,
+            organisation=org,
+            role="user")
+        invited = session.query(MembershipState).filter(
+            MembershipState.name == "invited").one()
+        now = datetime.datetime.utcnow()
+        session.add(Touch(artifact=mship, actor=user, state=invited, at=now))
+        session.commit()
+
+        # Show we can identify the Membership as having no LDAPAttribute
+        self.assertEqual(
+            (mship, None),
+            session.query(Membership, LDAPAttribute).join(Touch).outerjoin(LDAPAttribute).filter(
+                Membership.id == mship.id).one())
+
+        accepted = session.query(MembershipState).filter(
+            MembershipState.name == "accepted").one()
+        now = datetime.datetime.utcnow()
+        act = Touch(artifact=mship, actor=user, state=accepted, at=now)
+        resource = LDAPAttribute(
+            dn="cn={},ou=jasmin,ou=Groups,o=hpc,dc=rl,dc=ac,dc=uk".format(org.name),
+            key="memberUid", value=user.uuid, verb="add", touch=act)
+        session.add(resource)
+        session.commit()
+
+        # Check we can get at the resources from the membership
+        self.assertEqual(
+            (mship, resource),
+            session.query(Membership, LDAPAttribute).join(Touch).join(LDAPAttribute).filter(
                 Membership.id == mship.id).one())
 
 

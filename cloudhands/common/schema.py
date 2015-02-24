@@ -387,6 +387,27 @@ class Label(Resource):
     __mapper_args__ = {"polymorphic_identity": "label"}
 
 
+class LDAPAttribute(Resource):
+    """
+    This table stores the details of a modification to an entry
+    in an LDAP database.
+    """
+    __tablename__ = "ldapattributes"
+
+    id = Column("id", Integer, ForeignKey("resources.id"),
+                nullable=False, primary_key=True)
+    dn = Column(
+        "dn", String(length=128), nullable=False, unique=False)
+    key = Column(
+        "key", String(length=32), nullable=False, unique=False)
+    value = Column(
+        "value", String(length=32), nullable=False, unique=False)
+    verb = Column(
+        "verb", String(length=8), nullable=False, unique=False)
+
+    __mapper_args__ = {"polymorphic_identity": "ldapattribute"}
+
+
 class Directory(Resource):
     """
     This table stores directory paths.
