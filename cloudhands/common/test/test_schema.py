@@ -858,6 +858,14 @@ class TestLDAPResources(unittest.TestCase):
         r.disconnect(sqlite3, ":memory:")
 
     def test_ldapattribute_attaches_to_membership(self):
+
+        def find_mships_without_attributes(session):
+            return [
+                mship for mship in session.query(Membership).join(Touch).join(
+                State, State.name == "accepted").all()
+                if not any(isinstance(r, LDAPAttribute)
+                    for c in mship.changes for r in c.resources)]
+                
         session = Registry().connect(sqlite3, ":memory:").session
         session.flush()
         user = session.query(User).one()
@@ -867,20 +875,15 @@ class TestLDAPResources(unittest.TestCase):
             model=cloudhands.common.__version__,
             organisation=org,
             role="user")
-        invited = session.query(MembershipState).filter(
-            MembershipState.name == "invited").one()
-        now = datetime.datetime.utcnow()
-        session.add(Touch(artifact=mship, actor=user, state=invited, at=now))
-        session.commit()
-
-        # Show we can identify the Membership as having no LDAPAttribute
-        self.assertEqual(
-            (mship, None),
-            session.query(Membership, LDAPAttribute).join(Touch).outerjoin(LDAPAttribute).filter(
-                Membership.id == mship.id).one())
-
         accepted = session.query(MembershipState).filter(
             MembershipState.name == "accepted").one()
+        now = datetime.datetime.utcnow()
+        session.add(Touch(artifact=mship, actor=user, state=accepted, at=now))
+        session.commit()
+
+        remaining = find_mships_without_attributes(session)
+        self.assertEqual(1, len(remaining))
+
         now = datetime.datetime.utcnow()
         act = Touch(artifact=mship, actor=user, state=accepted, at=now)
         resource = LDAPAttribute(
@@ -894,6 +897,9 @@ class TestLDAPResources(unittest.TestCase):
             (mship, resource),
             session.query(Membership, LDAPAttribute).join(Touch).join(LDAPAttribute).filter(
                 Membership.id == mship.id).one())
+
+        remaining = find_mships_without_attributes(session)
+        self.assertFalse(remaining, remaining)
 
 
 class TestTimeInterval(unittest.TestCase):
