@@ -15,19 +15,23 @@ from cloudhands.common.connectors import initialise
 from cloudhands.common.connectors import Registry
 
 import cloudhands.common.schema
+from cloudhands.common.schema import Access
 from cloudhands.common.schema import Appliance
 from cloudhands.common.schema import Archive
 from cloudhands.common.schema import Component
 from cloudhands.common.schema import CatalogueChoice
 from cloudhands.common.schema import CatalogueItem
 from cloudhands.common.schema import Directory
+from cloudhands.common.schema import Group
 from cloudhands.common.schema import Host
 from cloudhands.common.schema import IPAddress
 from cloudhands.common.schema import Label
+from cloudhands.common.schema import LDAPAttribute
 from cloudhands.common.schema import Membership
 from cloudhands.common.schema import Node
 from cloudhands.common.schema import Organisation
 from cloudhands.common.schema import OSImage
+from cloudhands.common.schema import PosixGId
 from cloudhands.common.schema import Provider
 from cloudhands.common.schema import Registration
 from cloudhands.common.schema import Resource
@@ -39,6 +43,7 @@ from cloudhands.common.schema import Touch
 from cloudhands.common.schema import User
 
 from cloudhands.common.states import ApplianceState
+from cloudhands.common.states import AccessState
 from cloudhands.common.states import HostState
 from cloudhands.common.states import MembershipState
 from cloudhands.common.states import RegistrationState
@@ -404,6 +409,62 @@ class TestApplianceAndResources(unittest.TestCase):
         self.assertIn(node, resources)
         self.assertIn(sdn, resources)
         self.assertIn(ip, resources)
+
+
+class TestAccessAndGroups(unittest.TestCase):
+
+    def setUp(self):
+        """ Populate test database"""
+        session = Registry().connect(sqlite3, ":memory:").session
+        session.add_all(
+            State(fsm=AccessState.table, name=v)
+            for v in AccessState.values)
+        session.add(
+            Group(uuid=uuid.uuid4().hex, name="TestGroup", number=7654321))
+        session.commit()
+
+    def tearDown(self):
+        """ Every test gets its own in-memory database """
+        r = Registry()
+        r.disconnect(sqlite3, ":memory:")
+
+    def test_group_is_parent_of_access(self):
+        session = Registry().connect(sqlite3, ":memory:").session
+        session.flush()
+        grp = session.query(Group).one()
+        user = User(handle=None, uuid=uuid.uuid4().hex)
+        session.add(user)
+        session.commit()
+
+        access = Access(
+            uuid=uuid.uuid4().hex,
+            model=cloudhands.common.__version__,
+            group=grp,
+            role="user")
+        now = datetime.datetime.utcnow()
+        created = session.query(AccessState).filter(
+            AccessState.name == "created").one()
+        act = Touch(artifact=access, actor=user, state=created, at=now)
+        session.add(act)
+        session.commit()
+
+        # illustrates user onboarding - access gets decorated with
+        # posix resource(s)
+        latest = access.changes[-1]
+        now = datetime.datetime.utcnow()
+        gid = PosixGId(value=grp.number)
+        act = Touch(
+            artifact=access, actor=user, state=latest.state, at=now)
+        gid.touch = act
+        session.add(gid)
+        session.commit()
+    
+        # Check we can get at the resource from the access
+        self.assertIs(
+            gid,
+            session.query(Resource).join(Touch).join(Access).filter(
+                Access.id == access.id).one())
+
 
 
 class TestHostsAndResources(unittest.TestCase):
@@ -835,6 +896,70 @@ class TestDirectoryResources(unittest.TestCase):
             d,
             session.query(Resource).join(Touch).join(Membership).filter(
                 Membership.id == mship.id).one())
+
+
+class TestLDAPResources(unittest.TestCase):
+
+    def setUp(self):
+        """ Populate test database"""
+        session = Registry().connect(sqlite3, ":memory:").session
+        session.add_all(
+            State(fsm=MembershipState.table, name=v)
+            for v in MembershipState.values)
+        session.add(Organisation(
+            uuid=uuid.uuid4().hex,
+            name="TestOrg"))
+        session.add(User(handle="newuser", uuid=uuid.uuid4().hex))
+        session.commit()
+
+    def tearDown(self):
+        """ Every test gets its own in-memory database """
+        r = Registry()
+        r.disconnect(sqlite3, ":memory:")
+
+    def test_ldapattribute_attaches_to_membership(self):
+
+        def find_mships_without_attributes(session):
+            return [
+                mship for mship in session.query(Membership).join(Touch).join(
+                State, State.name == "accepted").all()
+                if not any(isinstance(r, LDAPAttribute)
+                    for c in mship.changes for r in c.resources)]
+                
+        session = Registry().connect(sqlite3, ":memory:").session
+        session.flush()
+        user = session.query(User).one()
+        org = session.query(Organisation).one()
+        mship = Membership(
+            uuid=uuid.uuid4().hex,
+            model=cloudhands.common.__version__,
+            organisation=org,
+            role="user")
+        accepted = session.query(MembershipState).filter(
+            MembershipState.name == "accepted").one()
+        now = datetime.datetime.utcnow()
+        session.add(Touch(artifact=mship, actor=user, state=accepted, at=now))
+        session.commit()
+
+        remaining = find_mships_without_attributes(session)
+        self.assertEqual(1, len(remaining))
+
+        now = datetime.datetime.utcnow()
+        act = Touch(artifact=mship, actor=user, state=accepted, at=now)
+        resource = LDAPAttribute(
+            dn="cn={},ou=jasmin,ou=Groups,o=hpc,dc=rl,dc=ac,dc=uk".format(org.name),
+            key="memberUid", value=user.uuid, verb="add", touch=act)
+        session.add(resource)
+        session.commit()
+
+        # Check we can get at the resources from the membership
+        self.assertEqual(
+            (mship, resource),
+            session.query(Membership, LDAPAttribute).join(Touch).join(LDAPAttribute).filter(
+                Membership.id == mship.id).one())
+
+        remaining = find_mships_without_attributes(session)
+        self.assertFalse(remaining, remaining)
 
 
 class TestTimeInterval(unittest.TestCase):

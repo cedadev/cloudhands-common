@@ -3,6 +3,18 @@
 
 from cloudhands.common.schema import fsm_factory
 
+
+AccessState = fsm_factory(
+    "access", [
+        "created",
+        "invited",
+        "accepted",
+        "active",
+        "expired",
+        "withdrawn"
+    ])
+
+
 ApplianceState = fsm_factory(
     "appliance", [
         "requested",
