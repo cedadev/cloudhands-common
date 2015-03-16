@@ -58,6 +58,7 @@ RegistrationState = fsm_factory(
         "pre_registration_inetorgperson_cn",
         "pre_user_inetorgperson_dn",
         "pre_user_posixaccount",
+        "user_posixaccount",
         "pre_user_ldappublickey",
         "valid",
         "active",
